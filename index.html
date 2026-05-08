@@ -71,6 +71,17 @@ canvas { display: block; }
 .trend-legend { display: flex; gap: 16px; margin-bottom: 10px; }
 .trend-legend span { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #888; }
 .trend-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.quick-fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: #1a1a1a; color: #fff; font-size: 28px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
+.quick-fab:active { transform: scale(0.94); }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: flex-end; }
+.overlay.open { display: flex; }
+.quick-sheet { background: #fff; border-radius: 20px 20px 0 0; padding: 20px 16px 32px; width: 100%; }
+.quick-sheet h3 { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
+.quick-amount { font-size: 32px; font-weight: 500; width: 100%; border: none; background: none; color: #1a1a1a; margin-bottom: 12px; outline: none; }
+.quick-cats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.quick-cat { padding: 7px 14px; border-radius: 20px; border: 1px solid #e0e0d8; background: #f5f5f0; font-size: 13px; cursor: pointer; color: #888; font-family: inherit; }
+.quick-cat.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.quick-confirm { width: 100%; padding: 14px; font-size: 15px; font-weight: 500; background: #D85A30; color: #fff; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; }
 </style>
 </head>
 <body>
@@ -183,9 +194,22 @@ canvas { display: block; }
 
 </div>
 
+<!-- 快速記帳浮動按鈕 -->
+<button class="quick-fab" onclick="openQuick()" aria-label="快速記帳">+</button>
+
+<!-- 快速記帳面板 -->
+<div class="overlay" id="quick-overlay" onclick="closeQuick(event)">
+  <div class="quick-sheet">
+    <h3>快速記帳（支出）</h3>
+    <input class="quick-amount" type="number" id="quick-amount" placeholder="輸入金額" inputmode="numeric">
+    <div class="quick-cats" id="quick-cats"></div>
+    <button class="quick-confirm" onclick="confirmQuick()">確認新增</button>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const EXPENSE_CATS = ['餐飲','交通','購物','娛樂','醫療','住房','水電','通訊','保險','其他'];
+const EXPENSE_CATS = ['餐飲','購物','交通','娛樂','醫療','住房','水電','通訊','保險','其他'];
 const INCOME_CATS = ['薪資','獎金','兼職','投資','其他收入'];
 const STORAGE_KEY = 'budget_records_v2';
 const SALARY_KEY = 'budget_salary';
@@ -384,6 +408,43 @@ function updateAll() {
   renderSummary();
   if (document.getElementById('tab-list').classList.contains('active')) { populateMonthFilter(); renderList(); }
   if (document.getElementById('tab-analysis').classList.contains('active')) renderAnalysis();
+}
+
+let quickCat = '購物';
+
+function openQuick() {
+  quickCat = '購物';
+  document.getElementById('quick-amount').value = '';
+  renderQuickCats();
+  document.getElementById('quick-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('quick-amount').focus(), 100);
+}
+
+function closeQuick(e) {
+  if (e.target === document.getElementById('quick-overlay')) {
+    document.getElementById('quick-overlay').classList.remove('open');
+  }
+}
+
+function renderQuickCats() {
+  document.getElementById('quick-cats').innerHTML = EXPENSE_CATS.map(c =>
+    `<button class="quick-cat ${c===quickCat?'active':''}" onclick="selectQuickCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function selectQuickCat(c) {
+  quickCat = c;
+  renderQuickCats();
+}
+
+function confirmQuick() {
+  const amount = parseFloat(document.getElementById('quick-amount').value);
+  if (!amount || amount <= 0) { alert('請輸入金額'); return; }
+  const records = loadRecords();
+  records.push({ id: Date.now(), type: 'expense', amount, cat: quickCat, date: new Date().toISOString().slice(0,10), note: '' });
+  saveRecords(records);
+  document.getElementById('quick-overlay').classList.remove('open');
+  updateAll();
 }
 
 function init() {
