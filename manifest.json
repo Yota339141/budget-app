@@ -1,0 +1,15 @@
+{
+  "name": "記帳本",
+  "short_name": "記帳本",
+  "start_url": "/budget-app/",
+  "display": "standalone",
+  "background_color": "#F0EEE6",
+  "theme_color": "#FF8C42",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
