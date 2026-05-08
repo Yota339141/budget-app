@@ -7,20 +7,38 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="記帳本">
 <title>記帳本</title>
-<link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans TC', sans-serif; background: #f5f5f0; color: #1a1a1a; max-width: 480px; margin: 0 auto; min-height: 100vh; }
 .header { background: #fff; padding: 16px 20px 0; border-bottom: 0.5px solid #e0e0d8; position: sticky; top: 0; z-index: 10; }
-.header h1 { font-size: 18px; font-weight: 500; margin-bottom: 12px; }
-.tab-bar { display: flex; gap: 0; }
-.tab { flex: 1; padding: 10px 0; font-size: 13px; background: none; border: none; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.header h1 { font-size: 18px; font-weight: 500; }
+.room-badge { font-size: 11px; background: #FF8C42; color: #fff; padding: 3px 8px; border-radius: 20px; cursor: pointer; }
+.tab-bar { display: flex; }
+.tab { flex: 1; padding: 10px 0; font-size: 12px; background: none; border: none; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
 .tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
-.content { padding: 16px; }
+.content { padding: 16px; padding-bottom: 80px; }
 .section { display: none; }
 .section.active { display: block; }
+.room-screen { position: fixed; inset: 0; background: #f5f5f0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; overflow-y: auto; }
+.room-screen.hidden { display: none; }
+.room-screen h2 { font-size: 22px; font-weight: 500; margin-bottom: 8px; }
+.room-screen p { font-size: 14px; color: #888; margin-bottom: 24px; text-align: center; }
+.room-card { background: #fff; border-radius: 16px; padding: 20px; width: 100%; margin-bottom: 12px; }
+.room-card h3 { font-size: 13px; color: #aaa; margin-bottom: 12px; font-weight: 500; }
+.room-input { width: 100%; padding: 10px 12px; font-size: 15px; background: #f5f5f0; border: none; border-radius: 10px; margin-bottom: 10px; outline: none; font-family: inherit; color: #1a1a1a; }
+.room-btn { width: 100%; padding: 13px; font-size: 15px; font-weight: 500; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; margin-bottom: 6px; }
+.room-btn.primary { background: #1a1a1a; color: #fff; }
+.room-btn.orange { background: #FF8C42; color: #fff; }
+.room-btn.outline { background: none; border: 1px solid #e0e0d8; color: #888; }
+.room-code-display { background: #f5f5f0; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px; }
+.room-code-display .code { font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #FF8C42; }
+.room-code-display .hint { font-size: 12px; color: #aaa; margin-top: 6px; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; display: inline-block; margin-right: 4px; }
+.sync-dot.online { background: #1D9E75; }
 .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
 .metric { background: #fff; border-radius: 12px; padding: 14px 12px; }
 .metric label { font-size: 11px; color: #888; display: block; margin-bottom: 4px; }
@@ -31,22 +49,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans TC', sans-seri
 .form-group { margin-bottom: 12px; }
 .form-group label { font-size: 12px; color: #888; display: block; margin-bottom: 5px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-input, select { width: 100%; padding: 10px 12px; font-size: 15px; background: #f5f5f0; color: #1a1a1a; border: none; border-radius: 10px; outline: none; }
-input:focus, select:focus { background: #eeeee8; }
+input, select { width: 100%; padding: 10px 12px; font-size: 15px; background: #f5f5f0; color: #1a1a1a; border: none; border-radius: 10px; outline: none; font-family: inherit; }
 .type-toggle { display: flex; border-radius: 10px; overflow: hidden; background: #f5f5f0; padding: 3px; gap: 3px; }
 .type-btn { flex: 1; padding: 9px; font-size: 14px; cursor: pointer; border: none; border-radius: 8px; background: none; color: #888; font-family: inherit; }
 .type-btn.active-expense { background: #fff; color: #D85A30; font-weight: 500; }
 .type-btn.active-income { background: #fff; color: #1D9E75; font-weight: 500; }
-.add-btn { width: 100%; padding: 13px; font-size: 15px; font-weight: 500; background: #1a1a1a; color: #fff; border: none; border-radius: 12px; cursor: pointer; margin-top: 4px; font-family: inherit; }
-.add-btn:active { opacity: 0.8; }
-.record-list { }
+.add-btn { width: 100%; padding: 13px; font-size: 15px; font-weight: 500; background: #1a1a1a; color: #fff; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; }
 .record-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid #f0f0e8; }
 .record-item:last-child { border-bottom: none; }
 .record-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .record-dot.income { background: #1D9E75; }
 .record-dot.expense { background: #D85A30; }
 .record-info { flex: 1; min-width: 0; }
-.record-info .name { font-size: 14px; color: #1a1a1a; }
+.record-info .name { font-size: 14px; }
 .record-info .meta { font-size: 11px; color: #aaa; margin-top: 2px; }
 .record-amount { font-size: 14px; font-weight: 500; white-space: nowrap; }
 .record-amount.income { color: #1D9E75; }
@@ -64,143 +79,187 @@ input:focus, select:focus { background: #eeeee8; }
 .cat-bar-fill.expense { background: #D85A30; }
 .cat-bar-fill.income { background: #1D9E75; }
 .cat-bar-val { font-size: 11px; color: #888; width: 68px; text-align: right; flex-shrink: 0; }
-.section-title { font-size: 12px; color: #aaa; font-weight: 500; margin-bottom: 10px; letter-spacing: 0.5px; }
+.section-title { font-size: 12px; color: #aaa; font-weight: 500; margin-bottom: 10px; }
 .salary-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .salary-row label { font-size: 13px; color: #888; white-space: nowrap; }
 .salary-row input { max-width: 160px; }
 .danger-btn { padding: 11px 20px; font-size: 14px; cursor: pointer; border-radius: 10px; border: 1px solid #D85A30; background: none; color: #D85A30; font-family: inherit; }
 .empty { text-align: center; padding: 2rem; color: #bbb; font-size: 14px; }
-canvas { display: block; }
 .trend-legend { display: flex; gap: 16px; margin-bottom: 10px; }
 .trend-legend span { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #888; }
 .trend-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-.quick-fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: #1a1a1a; color: #fff; font-size: 28px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
-.quick-fab:active { transform: scale(0.94); }
+.split-summary { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+.split-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid #f0f0e8; font-size: 14px; }
+.split-row:last-child { border-bottom: none; }
+.split-result { padding: 14px; background: #fff; border-radius: 14px; font-size: 14px; text-align: center; color: #1a1a1a; font-weight: 500; line-height: 2; }
+.quick-fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: #FF8C42; color: #fff; font-size: 28px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 40; box-shadow: 0 4px 16px rgba(255,140,66,0.4); }
 .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: flex-end; }
 .overlay.open { display: flex; }
 .quick-sheet { background: #fff; border-radius: 20px 20px 0 0; padding: 20px 16px 32px; width: 100%; }
 .quick-sheet h3 { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
-.quick-amount { font-size: 32px; font-weight: 500; width: 100%; border: none; background: none; color: #1a1a1a; margin-bottom: 12px; outline: none; }
+.quick-amount { font-size: 32px; font-weight: 500; width: 100%; border: none; background: none; color: #1a1a1a; margin-bottom: 12px; outline: none; font-family: inherit; }
 .quick-cats { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .quick-cat { padding: 7px 14px; border-radius: 20px; border: 1px solid #e0e0d8; background: #f5f5f0; font-size: 13px; cursor: pointer; color: #888; font-family: inherit; }
 .quick-cat.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.quick-confirm { width: 100%; padding: 14px; font-size: 15px; font-weight: 500; background: #D85A30; color: #fff; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; }
+.quick-confirm { width: 100%; padding: 14px; font-size: 15px; font-weight: 500; background: #FF8C42; color: #fff; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <h1>記帳本</h1>
-  <div class="tab-bar">
-    <button class="tab active" onclick="switchTab('record')">記帳</button>
-    <button class="tab" onclick="switchTab('list')">明細</button>
-    <button class="tab" onclick="switchTab('analysis')">月分析</button>
-    <button class="tab" onclick="switchTab('settings')">設定</button>
+<!-- 首頁：選擇模式 -->
+<div id="room-screen" class="room-screen">
+  <h2>📒 記帳本</h2>
+  <p>個人記帳，或與朋友建立共同帳本</p>
+  <div class="room-card">
+    <h3>個人使用</h3>
+    <input class="room-input" id="solo-name" placeholder="你的名字（例：Yota）">
+    <button class="room-btn primary" onclick="startSolo()">單人開始</button>
+  </div>
+  <div class="room-card">
+    <h3>多人共帳</h3>
+    <input class="room-input" id="create-name" placeholder="你的名字">
+    <button class="room-btn orange" onclick="createRoom()">＋ 建立新房間</button>
+    <div style="text-align:center;font-size:12px;color:#ccc;margin:10px 0;">或加入現有房間</div>
+    <input class="room-input" id="join-name" placeholder="你的名字">
+    <input class="room-input" id="join-code" placeholder="4碼房間代碼" maxlength="4" style="text-transform:uppercase;letter-spacing:6px;text-align:center;">
+    <button class="room-btn outline" onclick="joinRoom()">加入房間</button>
   </div>
 </div>
 
-<div class="content">
-
-  <!-- 記帳 -->
-  <div id="tab-record" class="section active">
-    <div class="metric-grid" id="summary-metrics"></div>
-    <div class="card">
-      <div class="form-group">
-        <label>類型</label>
-        <div class="type-toggle">
-          <button class="type-btn active-expense" id="btn-expense" onclick="setType('expense')">支出</button>
-          <button class="type-btn" id="btn-income" onclick="setType('income')">收入</button>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>金額（NT$）</label>
-          <input type="number" id="inp-amount" placeholder="0" inputmode="numeric">
-        </div>
-        <div class="form-group">
-          <label>分類</label>
-          <select id="inp-cat"></select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>日期</label>
-          <input type="date" id="inp-date">
-        </div>
-        <div class="form-group">
-          <label>備註</label>
-          <input type="text" id="inp-note" placeholder="選填">
-        </div>
-      </div>
-      <button class="add-btn" onclick="addRecord()">新增</button>
-    </div>
+<!-- 建立房間後顯示代碼 -->
+<div id="room-code-screen" class="room-screen hidden">
+  <h2>房間建立成功 🎉</h2>
+  <p>把代碼傳給朋友，讓他們加入</p>
+  <div class="room-code-display">
+    <div class="code" id="display-code"></div>
+    <div class="hint">房間代碼（4碼）</div>
   </div>
-
-  <!-- 明細 -->
-  <div id="tab-list" class="section">
-    <div class="filter-row">
-      <select id="filter-month" onchange="renderList()"></select>
-      <select id="filter-type" onchange="renderList()">
-        <option value="all">全部</option>
-        <option value="expense">支出</option>
-        <option value="income">收入</option>
-      </select>
-    </div>
-    <div class="card">
-      <div class="record-list" id="record-list"></div>
-    </div>
-  </div>
-
-  <!-- 月分析 -->
-  <div id="tab-analysis" class="section">
-    <div class="month-nav">
-      <button onclick="analysisMonthShift(-1)">&#8592;</button>
-      <span id="analysis-month-label"></span>
-      <button onclick="analysisMonthShift(1)">&#8594;</button>
-    </div>
-    <div class="metric-grid" id="analysis-metrics"></div>
-    <div class="card">
-      <div class="section-title">支出分類</div>
-      <div id="expense-bars"></div>
-    </div>
-    <div class="card">
-      <div class="section-title">收入來源</div>
-      <div id="income-bars"></div>
-    </div>
-    <div class="card">
-      <div class="section-title">近 6 個月趨勢</div>
-      <div class="trend-legend">
-        <span><i style="background:#1D9E75"></i>收入</span>
-        <span><i style="background:#D85A30"></i>支出</span>
-      </div>
-      <div style="position:relative;width:100%;height:180px;">
-        <canvas id="trend-chart" role="img" aria-label="近6個月收支趨勢"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- 設定 -->
-  <div id="tab-settings" class="section">
-    <div class="card">
-      <div class="section-title">固定月薪</div>
-      <div class="salary-row">
-        <label>每月薪資 NT$</label>
-        <input type="number" id="salary-input" placeholder="0" inputmode="numeric" oninput="saveSalary()">
-      </div>
-      <div style="font-size:12px;color:#bbb;">設定後自動帶入每月收入</div>
-    </div>
-    <div class="card">
-      <div class="section-title">資料管理</div>
-      <button class="danger-btn" onclick="clearAll()">清除所有記帳資料</button>
-    </div>
-  </div>
-
+  <button class="room-btn orange" onclick="enterApp()" style="width:100%;">進入記帳</button>
 </div>
 
-<!-- 快速記帳浮動按鈕 -->
-<button class="quick-fab" onclick="openQuick()" aria-label="快速記帳">+</button>
+<!-- 主畫面 -->
+<div id="main-app" style="display:none;">
+  <div class="header">
+    <div class="header-top">
+      <h1>記帳本</h1>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span><span class="sync-dot" id="sync-dot"></span><span id="sync-label" style="font-size:11px;color:#aaa;">連線中</span></span>
+        <span class="room-badge" id="room-badge">個人</span>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab active" onclick="switchTab('record')">記帳</button>
+      <button class="tab" onclick="switchTab('list')">明細</button>
+      <button class="tab" onclick="switchTab('analysis')">月分析</button>
+      <button class="tab" onclick="switchTab('split')">分帳</button>
+      <button class="tab" onclick="switchTab('settings')">設定</button>
+    </div>
+  </div>
 
-<!-- 快速記帳面板 -->
+  <div class="content">
+    <!-- 記帳 -->
+    <div id="tab-record" class="section active">
+      <div class="metric-grid" id="summary-metrics"></div>
+      <div class="card">
+        <div class="form-group">
+          <label>類型</label>
+          <div class="type-toggle">
+            <button class="type-btn active-expense" id="btn-expense" onclick="setType('expense')">支出</button>
+            <button class="type-btn" id="btn-income" onclick="setType('income')">收入</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>金額（NT$）</label>
+            <input type="number" id="inp-amount" placeholder="0" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label>分類</label>
+            <select id="inp-cat"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="inp-date">
+          </div>
+          <div class="form-group">
+            <label>備註</label>
+            <input type="text" id="inp-note" placeholder="選填">
+          </div>
+        </div>
+        <button class="add-btn" onclick="addRecord()">新增</button>
+      </div>
+    </div>
+
+    <!-- 明細 -->
+    <div id="tab-list" class="section">
+      <div class="filter-row">
+        <select id="filter-month" onchange="renderList()"></select>
+        <select id="filter-type" onchange="renderList()">
+          <option value="all">全部</option>
+          <option value="expense">支出</option>
+          <option value="income">收入</option>
+        </select>
+      </div>
+      <div class="card"><div id="record-list"></div></div>
+    </div>
+
+    <!-- 月分析 -->
+    <div id="tab-analysis" class="section">
+      <div class="month-nav">
+        <button onclick="analysisMonthShift(-1)">&#8592;</button>
+        <span id="analysis-month-label"></span>
+        <button onclick="analysisMonthShift(1)">&#8594;</button>
+      </div>
+      <div class="metric-grid" id="analysis-metrics"></div>
+      <div class="card">
+        <div class="section-title">支出分類</div>
+        <div id="expense-bars"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">收入來源</div>
+        <div id="income-bars"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">近 6 個月趨勢</div>
+        <div class="trend-legend">
+          <span><i style="background:#1D9E75"></i>收入</span>
+          <span><i style="background:#D85A30"></i>支出</span>
+        </div>
+        <div style="position:relative;width:100%;height:180px;">
+          <canvas id="trend-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 分帳 -->
+    <div id="tab-split" class="section">
+      <div id="split-content"></div>
+    </div>
+
+    <!-- 設定 -->
+    <div id="tab-settings" class="section">
+      <div class="card">
+        <div class="section-title">固定月薪</div>
+        <div class="salary-row">
+          <label>每月薪資 NT$</label>
+          <input type="number" id="salary-input" placeholder="0" inputmode="numeric" oninput="saveSalary()">
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">房間資訊</div>
+        <div id="room-info-card" style="font-size:14px;color:#888;line-height:2;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">離開</div>
+        <button class="danger-btn" onclick="leaveRoom()">離開並回到首頁</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="quick-fab" onclick="openQuick()" id="quick-fab" style="display:none;" aria-label="快速記帳">+</button>
 <div class="overlay" id="quick-overlay" onclick="closeQuick(event)">
   <div class="quick-sheet">
     <h3>快速記帳（支出）</h3>
@@ -211,83 +270,176 @@ canvas { display: block; }
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, push, onValue, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAExM8OPwQ8iM-sNWk5q1B4g64kflxivHU",
+  authDomain: "budget-app-5bed4.firebaseapp.com",
+  databaseURL: "https://budget-app-5bed4-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "budget-app-5bed4",
+  storageBucket: "budget-app-5bed4.firebasestorage.app",
+  messagingSenderId: "526050928979",
+  appId: "1:526050928979:web:347401d2d82603808cd9a6"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+
 const EXPENSE_CATS = ['餐飲','購物','交通','娛樂','醫療','住房','水電','通訊','保險','其他'];
 const INCOME_CATS = ['薪資','獎金','兼職','投資','其他收入'];
-const STORAGE_KEY = 'budget_records_v2';
-const SALARY_KEY = 'budget_salary';
 
 let currentType = 'expense';
 let analysisMonth = '';
 let trendChart = null;
+let quickCat = '購物';
+let roomId = '';
+let userName = '';
+let isMulti = false;
+let records = {};
+let dbRef = null;
+let unsubscribeFn = null;
 
-function loadRecords() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
-}
-function saveRecords(r) { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); }
-function loadSalary() { return parseInt(localStorage.getItem(SALARY_KEY)) || 0; }
-function saveSalary() {
-  const v = parseInt(document.getElementById('salary-input').value) || 0;
-  localStorage.setItem(SALARY_KEY, v);
-}
-function clearAll() {
-  if (confirm('確定清除所有資料？')) { localStorage.removeItem(STORAGE_KEY); updateAll(); }
-}
-function fmt(n) { return 'NT$' + Math.round(n).toLocaleString(); }
-function getMonthKey(d) { return d.slice(0,7); }
-function thisMonth() { return new Date().toISOString().slice(0,7); }
+const fmt = n => 'NT$' + Math.round(n).toLocaleString();
+const getMonthKey = d => d.slice(0,7);
+const thisMonth = () => new Date().toISOString().slice(0,7);
+const loadSalary = () => parseInt(localStorage.getItem('budget_salary')) || 0;
 
-function setType(t) {
+window.saveSalary = () => {
+  localStorage.setItem('budget_salary', parseInt(document.getElementById('salary-input').value) || 0);
+};
+
+function genCode() { return Math.random().toString(36).substring(2,6).toUpperCase(); }
+
+function startListening() {
+  if (unsubscribeFn) unsubscribeFn();
+  document.getElementById('sync-dot').className = 'sync-dot online';
+  document.getElementById('sync-label').textContent = '已連線';
+  unsubscribeFn = onValue(dbRef, snap => {
+    records = snap.val() || {};
+    updateAll();
+  });
+}
+
+window.startSolo = () => {
+  const name = document.getElementById('solo-name').value.trim() || '我';
+  userName = name; isMulti = false;
+  // 用名字當 key，讀取上次的 roomId，沒有才產生新的
+  const storageKey = 'solo_room_id_' + name;
+  let savedId = localStorage.getItem(storageKey);
+  if (!savedId) {
+    savedId = 'solo_' + name + '_' + Date.now();
+    localStorage.setItem(storageKey, savedId);
+  }
+  roomId = savedId;
+  dbRef = ref(db, 'rooms/' + roomId + '/records');
+  startListening(); enterApp();
+};
+
+window.createRoom = () => {
+  const name = document.getElementById('create-name').value.trim();
+  if (!name) { alert('請輸入名字'); return; }
+  userName = name; isMulti = true;
+  roomId = genCode();
+  dbRef = ref(db, 'rooms/' + roomId + '/records');
+  document.getElementById('display-code').textContent = roomId;
+  document.getElementById('room-screen').classList.add('hidden');
+  document.getElementById('room-code-screen').classList.remove('hidden');
+  startListening();
+};
+
+window.joinRoom = () => {
+  const name = document.getElementById('join-name').value.trim();
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (!name || code.length !== 4) { alert('請輸入名字和4碼房間代碼'); return; }
+  userName = name; isMulti = true; roomId = code;
+  dbRef = ref(db, 'rooms/' + code + '/records');
+  startListening(); enterApp();
+};
+
+window.enterApp = () => {
+  document.getElementById('room-screen').classList.add('hidden');
+  document.getElementById('room-code-screen').classList.add('hidden');
+  document.getElementById('main-app').style.display = 'block';
+  document.getElementById('quick-fab').style.display = 'flex';
+  document.getElementById('room-badge').textContent = isMulti ? '房間 ' + roomId : '個人';
+  const s = loadSalary();
+  if (s) document.getElementById('salary-input').value = s;
+  analysisMonth = thisMonth();
+  document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
+  updateCatSelect(); renderQuickCats();
+  document.getElementById('room-info-card').innerHTML = isMulti
+    ? `房間代碼：<strong>${roomId}</strong><br>你的名字：${userName}`
+    : `個人使用 · ${userName}`;
+};
+
+window.leaveRoom = () => {
+  if (!isMulti) return; // 單人不需要離開
+  if (unsubscribeFn) unsubscribeFn();
+  records = {};
+  // 離開多人房間後，自動回到單人帳本
+  isMulti = false;
+  const storageKey = 'solo_room_id_' + userName;
+  let savedId = localStorage.getItem(storageKey);
+  if (!savedId) {
+    savedId = 'solo_' + userName + '_' + Date.now();
+    localStorage.setItem(storageKey, savedId);
+  }
+  roomId = savedId;
+  dbRef = ref(db, 'rooms/' + roomId + '/records');
+  document.getElementById('room-badge').textContent = '個人';
+  document.getElementById('room-info-card').innerHTML = '個人使用 · ' + userName;
+  startListening();
+  alert('已離開多人房間，回到你的個人帳本');
+};
+
+window.setType = t => {
   currentType = t;
   document.getElementById('btn-expense').className = 'type-btn' + (t==='expense'?' active-expense':'');
   document.getElementById('btn-income').className = 'type-btn' + (t==='income'?' active-income':'');
   updateCatSelect();
-}
+};
 
 function updateCatSelect() {
-  const s = document.getElementById('inp-cat');
   const cats = currentType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
-  s.innerHTML = cats.map(c => `<option>${c}</option>`).join('');
+  document.getElementById('inp-cat').innerHTML = cats.map(c => `<option>${c}</option>`).join('');
 }
 
-function addRecord() {
+window.addRecord = () => {
   const amount = parseFloat(document.getElementById('inp-amount').value);
   if (!amount || amount <= 0) { alert('請輸入金額'); return; }
-  const cat = document.getElementById('inp-cat').value;
   const date = document.getElementById('inp-date').value;
-  const note = document.getElementById('inp-note').value.trim();
   if (!date) { alert('請選擇日期'); return; }
-  const records = loadRecords();
-  records.push({ id: Date.now(), type: currentType, amount, cat, date, note });
-  saveRecords(records);
+  push(dbRef, {
+    type: currentType, amount,
+    cat: document.getElementById('inp-cat').value,
+    date, note: document.getElementById('inp-note').value.trim(),
+    user: userName, ts: Date.now()
+  });
   document.getElementById('inp-amount').value = '';
   document.getElementById('inp-note').value = '';
-  updateAll();
-}
+};
 
-function deleteRecord(id) {
-  saveRecords(loadRecords().filter(r => r.id !== id));
-  updateAll();
-}
+window.deleteRecord = id => remove(ref(db, 'rooms/' + roomId + '/records/' + id));
+
+const getArr = () => Object.entries(records).map(([id, r]) => ({ ...r, id }));
 
 function renderSummary() {
-  const records = loadRecords();
-  const m = thisMonth();
-  const salary = loadSalary();
-  const monthRec = records.filter(r => getMonthKey(r.date) === m);
-  let income = monthRec.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  let expense = monthRec.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  const arr = getArr(); const m = thisMonth(); const salary = loadSalary();
+  const mr = arr.filter(r => getMonthKey(r.date) === m);
+  let income = mr.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  let expense = mr.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
   if (salary) income = Math.max(income, salary);
   const balance = income - expense;
   document.getElementById('summary-metrics').innerHTML = `
     <div class="metric"><label>本月收入</label><div class="val green">${fmt(income)}</div></div>
     <div class="metric"><label>本月支出</label><div class="val red">${fmt(expense)}</div></div>
-    <div class="metric"><label>結餘</label><div class="val ${balance>=0?'green':'red'}">${fmt(balance)}</div></div>
-  `;
+    <div class="metric"><label>結餘</label><div class="val ${balance>=0?'green':'red'}">${fmt(balance)}</div></div>`;
 }
 
 function populateMonthFilter() {
-  const months = new Set(loadRecords().map(r=>getMonthKey(r.date)));
+  const months = new Set(getArr().map(r=>getMonthKey(r.date)));
   months.add(thisMonth());
   const sorted = Array.from(months).sort().reverse();
   const s = document.getElementById('filter-month');
@@ -295,10 +447,10 @@ function populateMonthFilter() {
   s.innerHTML = sorted.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m.replace('-','年')}月</option>`).join('');
 }
 
-function renderList() {
+window.renderList = () => {
   const fm = document.getElementById('filter-month').value;
   const ft = document.getElementById('filter-type').value;
-  let filtered = loadRecords().filter(r => getMonthKey(r.date) === fm);
+  let filtered = getArr().filter(r => getMonthKey(r.date) === fm);
   if (ft !== 'all') filtered = filtered.filter(r => r.type === ft);
   filtered.sort((a,b) => b.date.localeCompare(a.date));
   const el = document.getElementById('record-list');
@@ -307,40 +459,35 @@ function renderList() {
     <div class="record-item">
       <div class="record-dot ${r.type}"></div>
       <div class="record-info">
-        <div class="name">${r.cat}${r.note?' · '+r.note:''}</div>
+        <div class="name">${r.cat}${r.note?' · '+r.note:''}${isMulti?` <span style="font-size:10px;color:#FF8C42;font-weight:500;">${r.user}</span>`:''}</div>
         <div class="meta">${r.date}</div>
       </div>
       <div class="record-amount ${r.type}">${r.type==='income'?'+':'-'}${fmt(r.amount)}</div>
-      <button class="del-btn" onclick="deleteRecord(${r.id})" aria-label="刪除">✕</button>
-    </div>
-  `).join('');
-}
+      <button class="del-btn" onclick="deleteRecord('${r.id}')">✕</button>
+    </div>`).join('');
+};
 
 function renderAnalysis() {
-  const records = loadRecords();
-  const salary = loadSalary();
-  const m = analysisMonth;
+  const arr = getArr(); const salary = loadSalary(); const m = analysisMonth;
   document.getElementById('analysis-month-label').textContent = m.replace('-','年') + '月';
-  const monthRec = records.filter(r => getMonthKey(r.date) === m);
-  let income = monthRec.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  let expense = monthRec.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  const mr = arr.filter(r => getMonthKey(r.date) === m);
+  let income = mr.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  let expense = mr.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
   if (salary && m === thisMonth()) income = Math.max(income, salary);
   const balance = income - expense;
   const rate = income > 0 ? Math.round((balance/income)*100) : 0;
   document.getElementById('analysis-metrics').innerHTML = `
     <div class="metric"><label>收入</label><div class="val green">${fmt(income)}</div></div>
     <div class="metric"><label>支出</label><div class="val red">${fmt(expense)}</div></div>
-    <div class="metric"><label>儲蓄率</label><div class="val ${rate>=0?'green':'red'}">${rate}%</div></div>
-  `;
-  renderBars('expense', monthRec, 'expense-bars');
-  renderBars('income', monthRec, 'income-bars');
-  renderTrend(records, salary);
+    <div class="metric"><label>儲蓄率</label><div class="val ${rate>=0?'green':'red'}">${rate}%</div></div>`;
+  renderBars('expense', mr, 'expense-bars');
+  renderBars('income', mr, 'income-bars');
+  renderTrend(arr, salary);
 }
 
-function renderBars(type, records, elId) {
-  const filtered = records.filter(r=>r.type===type);
+function renderBars(type, recs, elId) {
   const cats = {};
-  filtered.forEach(r => { cats[r.cat] = (cats[r.cat]||0) + r.amount; });
+  recs.filter(r=>r.type===type).forEach(r => { cats[r.cat] = (cats[r.cat]||0) + r.amount; });
   const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
   const total = sorted.reduce((s,e)=>s+e[1],0);
   const el = document.getElementById(elId);
@@ -350,116 +497,95 @@ function renderBars(type, records, elId) {
       <div class="cat-bar-label">${cat}</div>
       <div class="cat-bar-wrap"><div class="cat-bar-fill ${type}" style="width:${Math.round((amt/total)*100)}%"></div></div>
       <div class="cat-bar-val">${fmt(amt)}</div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function renderTrend(records, salary) {
-  const months = [];
-  const now = new Date();
-  for (let i=5;i>=0;i--) {
-    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-    months.push(d.toISOString().slice(0,7));
-  }
-  const incomes = months.map(m => {
-    let v = records.filter(r=>r.type==='income'&&getMonthKey(r.date)===m).reduce((s,r)=>s+r.amount,0);
-    if (salary && m===thisMonth()) v = Math.max(v, salary);
-    return v;
-  });
-  const expenses = months.map(m =>
-    records.filter(r=>r.type==='expense'&&getMonthKey(r.date)===m).reduce((s,r)=>s+r.amount,0)
-  );
+function renderTrend(arr, salary) {
+  const months = [], now = new Date();
+  for (let i=5;i>=0;i--) { const d = new Date(now.getFullYear(), now.getMonth()-i, 1); months.push(d.toISOString().slice(0,7)); }
+  const incomes = months.map(m => { let v = arr.filter(r=>r.type==='income'&&getMonthKey(r.date)===m).reduce((s,r)=>s+r.amount,0); if (salary&&m===thisMonth()) v=Math.max(v,salary); return v; });
+  const expenses = months.map(m => arr.filter(r=>r.type==='expense'&&getMonthKey(r.date)===m).reduce((s,r)=>s+r.amount,0));
   if (trendChart) trendChart.destroy();
   trendChart = new Chart(document.getElementById('trend-chart'), {
     type: 'line',
-    data: {
-      labels: months.map(m => m.slice(5)+'月'),
-      datasets: [
-        { label: '收入', data: incomes, borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.08)', tension: 0.3, pointRadius: 4 },
-        { label: '支出', data: expenses, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.08)', tension: 0.3, pointRadius: 4 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { ticks: { callback: v => 'NT$'+v.toLocaleString(), font:{size:10} }, grid: { color: 'rgba(0,0,0,0.06)' } },
-        x: { ticks: { font:{size:11} }, grid: { display: false } }
-      }
-    }
+    data: { labels: months.map(m=>m.slice(5)+'月'), datasets: [
+      { label:'收入', data:incomes, borderColor:'#1D9E75', backgroundColor:'rgba(29,158,117,0.08)', tension:0.3, pointRadius:4 },
+      { label:'支出', data:expenses, borderColor:'#D85A30', backgroundColor:'rgba(216,90,48,0.08)', tension:0.3, pointRadius:4 }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales: { y:{ticks:{callback:v=>'NT$'+v.toLocaleString(),font:{size:10}},grid:{color:'rgba(0,0,0,0.06)'}}, x:{ticks:{font:{size:11}},grid:{display:false}} } }
   });
 }
 
-function analysisMonthShift(delta) {
-  const d = new Date(analysisMonth+'-01');
-  d.setMonth(d.getMonth()+delta);
-  analysisMonth = d.toISOString().slice(0,7);
-  renderAnalysis();
+function renderSplit() {
+  const el = document.getElementById('split-content');
+  if (!isMulti) { el.innerHTML = '<div class="empty">分帳功能需要建立多人房間</div>'; return; }
+  const arr = getArr().filter(r => getMonthKey(r.date) === thisMonth() && r.type === 'expense');
+  const users = {};
+  arr.forEach(r => { users[r.user] = (users[r.user]||0) + r.amount; });
+  const userList = Object.keys(users);
+  const total = Object.values(users).reduce((s,v)=>s+v,0);
+  const avg = userList.length > 0 ? total / userList.length : 0;
+  const rows = userList.map(u => `<div class="split-row"><span>${u}</span><span style="color:#D85A30">${fmt(users[u])}</span></div>`).join('');
+  let results = [];
+  userList.forEach(u => {
+    const diff = users[u] - avg;
+    if (diff < -10) results.push(`${u} 應收 ${fmt(Math.abs(diff))}`);
+    else if (diff > 10) results.push(`${u} 應付 ${fmt(diff)}`);
+  });
+  el.innerHTML = `
+    <div class="split-summary">
+      <div class="section-title">${thisMonth().replace('-','年')}月 共同支出</div>
+      ${rows || '<div class="empty" style="padding:0.5rem">無記錄</div>'}
+      <div class="split-row"><span>總計</span><span style="font-weight:500">${fmt(total)}</span></div>
+      <div class="split-row"><span>每人平均</span><span>${fmt(avg)}</span></div>
+    </div>
+    ${results.length ? `<div class="split-result">💰 結算<br>${results.join('<br>')}</div>` : ''}`;
 }
 
-function switchTab(t) {
-  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+window.analysisMonthShift = delta => {
+  const d = new Date(analysisMonth+'-01'); d.setMonth(d.getMonth()+delta);
+  analysisMonth = d.toISOString().slice(0,7); renderAnalysis();
+};
+
+window.switchTab = t => {
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
-  const tabs = ['record','list','analysis','settings'];
-  document.querySelectorAll('.tab')[tabs.indexOf(t)].classList.add('active');
+  ['record','list','analysis','split','settings'].forEach((name,i) => { if(name===t) document.querySelectorAll('.tab')[i].classList.add('active'); });
   if (t==='list') { populateMonthFilter(); renderList(); }
   if (t==='analysis') renderAnalysis();
-}
+  if (t==='split') renderSplit();
+};
 
 function updateAll() {
   renderSummary();
-  if (document.getElementById('tab-list').classList.contains('active')) { populateMonthFilter(); renderList(); }
-  if (document.getElementById('tab-analysis').classList.contains('active')) renderAnalysis();
+  const active = document.querySelector('#main-app .section.active');
+  if (!active) return;
+  if (active.id==='tab-list') { populateMonthFilter(); renderList(); }
+  if (active.id==='tab-analysis') renderAnalysis();
+  if (active.id==='tab-split') renderSplit();
 }
 
-let quickCat = '購物';
-
-function openQuick() {
+window.openQuick = () => {
   quickCat = '購物';
   document.getElementById('quick-amount').value = '';
   renderQuickCats();
   document.getElementById('quick-overlay').classList.add('open');
   setTimeout(() => document.getElementById('quick-amount').focus(), 100);
-}
-
-function closeQuick(e) {
-  if (e.target === document.getElementById('quick-overlay')) {
-    document.getElementById('quick-overlay').classList.remove('open');
-  }
-}
-
+};
+window.closeQuick = e => { if (e.target===document.getElementById('quick-overlay')) document.getElementById('quick-overlay').classList.remove('open'); };
 function renderQuickCats() {
   document.getElementById('quick-cats').innerHTML = EXPENSE_CATS.map(c =>
-    `<button class="quick-cat ${c===quickCat?'active':''}" onclick="selectQuickCat('${c}')">${c}</button>`
-  ).join('');
+    `<button class="quick-cat ${c===quickCat?'active':''}" onclick="selectQuickCat('${c}')">${c}</button>`).join('');
 }
-
-function selectQuickCat(c) {
-  quickCat = c;
-  renderQuickCats();
-}
-
-function confirmQuick() {
+window.selectQuickCat = c => { quickCat = c; renderQuickCats(); };
+window.confirmQuick = () => {
   const amount = parseFloat(document.getElementById('quick-amount').value);
   if (!amount || amount <= 0) { alert('請輸入金額'); return; }
-  const records = loadRecords();
-  records.push({ id: Date.now(), type: 'expense', amount, cat: quickCat, date: new Date().toISOString().slice(0,10), note: '' });
-  saveRecords(records);
+  push(dbRef, { type:'expense', amount, cat:quickCat, date:new Date().toISOString().slice(0,10), note:'', user:userName, ts:Date.now() });
   document.getElementById('quick-overlay').classList.remove('open');
-  updateAll();
-}
-
-function init() {
-  document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
-  analysisMonth = thisMonth();
-  updateCatSelect();
-  renderSummary();
-  const s = loadSalary();
-  if (s) document.getElementById('salary-input').value = s;
-}
-
-init();
+};
 </script>
 </body>
 </html>
