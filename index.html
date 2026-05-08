@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="記帳本">
+<title>記帳本</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans TC', sans-serif; background: #f5f5f0; color: #1a1a1a; max-width: 480px; margin: 0 auto; min-height: 100vh; }
+.header { background: #fff; padding: 16px 20px 0; border-bottom: 0.5px solid #e0e0d8; position: sticky; top: 0; z-index: 10; }
+.header h1 { font-size: 18px; font-weight: 500; margin-bottom: 12px; }
+.tab-bar { display: flex; gap: 0; }
+.tab { flex: 1; padding: 10px 0; font-size: 13px; background: none; border: none; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
+.tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+.content { padding: 16px; }
+.section { display: none; }
+.section.active { display: block; }
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.metric { background: #fff; border-radius: 12px; padding: 14px 12px; }
+.metric label { font-size: 11px; color: #888; display: block; margin-bottom: 4px; }
+.metric .val { font-size: 17px; font-weight: 500; }
+.metric .val.green { color: #1D9E75; }
+.metric .val.red { color: #D85A30; }
+.card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { font-size: 12px; color: #888; display: block; margin-bottom: 5px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+input, select { width: 100%; padding: 10px 12px; font-size: 15px; background: #f5f5f0; color: #1a1a1a; border: none; border-radius: 10px; outline: none; }
+input:focus, select:focus { background: #eeeee8; }
+.type-toggle { display: flex; border-radius: 10px; overflow: hidden; background: #f5f5f0; padding: 3px; gap: 3px; }
+.type-btn { flex: 1; padding: 9px; font-size: 14px; cursor: pointer; border: none; border-radius: 8px; background: none; color: #888; font-family: inherit; }
+.type-btn.active-expense { background: #fff; color: #D85A30; font-weight: 500; }
+.type-btn.active-income { background: #fff; color: #1D9E75; font-weight: 500; }
+.add-btn { width: 100%; padding: 13px; font-size: 15px; font-weight: 500; background: #1a1a1a; color: #fff; border: none; border-radius: 12px; cursor: pointer; margin-top: 4px; font-family: inherit; }
+.add-btn:active { opacity: 0.8; }
+.record-list { }
+.record-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid #f0f0e8; }
+.record-item:last-child { border-bottom: none; }
+.record-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.record-dot.income { background: #1D9E75; }
+.record-dot.expense { background: #D85A30; }
+.record-info { flex: 1; min-width: 0; }
+.record-info .name { font-size: 14px; color: #1a1a1a; }
+.record-info .meta { font-size: 11px; color: #aaa; margin-top: 2px; }
+.record-amount { font-size: 14px; font-weight: 500; white-space: nowrap; }
+.record-amount.income { color: #1D9E75; }
+.record-amount.expense { color: #D85A30; }
+.del-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 16px; padding: 4px 6px; }
+.filter-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.filter-row select { background: #fff; }
+.month-nav { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.month-nav button { background: #fff; border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 15px; }
+.month-nav span { font-size: 15px; font-weight: 500; flex: 1; text-align: center; }
+.cat-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.cat-bar-label { font-size: 12px; color: #888; width: 52px; flex-shrink: 0; text-align: right; }
+.cat-bar-wrap { flex: 1; height: 7px; background: #f0f0e8; border-radius: 4px; overflow: hidden; }
+.cat-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.cat-bar-fill.expense { background: #D85A30; }
+.cat-bar-fill.income { background: #1D9E75; }
+.cat-bar-val { font-size: 11px; color: #888; width: 68px; text-align: right; flex-shrink: 0; }
+.section-title { font-size: 12px; color: #aaa; font-weight: 500; margin-bottom: 10px; letter-spacing: 0.5px; }
+.salary-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.salary-row label { font-size: 13px; color: #888; white-space: nowrap; }
+.salary-row input { max-width: 160px; }
+.danger-btn { padding: 11px 20px; font-size: 14px; cursor: pointer; border-radius: 10px; border: 1px solid #D85A30; background: none; color: #D85A30; font-family: inherit; }
+.empty { text-align: center; padding: 2rem; color: #bbb; font-size: 14px; }
+canvas { display: block; }
+.trend-legend { display: flex; gap: 16px; margin-bottom: 10px; }
+.trend-legend span { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #888; }
+.trend-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>記帳本</h1>
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('record')">記帳</button>
+    <button class="tab" onclick="switchTab('list')">明細</button>
+    <button class="tab" onclick="switchTab('analysis')">月分析</button>
+    <button class="tab" onclick="switchTab('settings')">設定</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- 記帳 -->
+  <div id="tab-record" class="section active">
+    <div class="metric-grid" id="summary-metrics"></div>
+    <div class="card">
+      <div class="form-group">
+        <label>類型</label>
+        <div class="type-toggle">
+          <button class="type-btn active-expense" id="btn-expense" onclick="setType('expense')">支出</button>
+          <button class="type-btn" id="btn-income" onclick="setType('income')">收入</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>金額（NT$）</label>
+          <input type="number" id="inp-amount" placeholder="0" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label>分類</label>
+          <select id="inp-cat"></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>日期</label>
+          <input type="date" id="inp-date">
+        </div>
+        <div class="form-group">
+          <label>備註</label>
+          <input type="text" id="inp-note" placeholder="選填">
+        </div>
+      </div>
+      <button class="add-btn" onclick="addRecord()">新增</button>
+    </div>
+  </div>
+
+  <!-- 明細 -->
+  <div id="tab-list" class="section">
+    <div class="filter-row">
+      <select id="filter-month" onchange="renderList()"></select>
+      <select id="filter-type" onchange="renderList()">
+        <option value="all">全部</option>
+        <option value="expense">支出</option>
+        <option value="income">收入</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="record-list" id="record-list"></div>
+    </div>
+  </div>
+
+  <!-- 月分析 -->
+  <div id="tab-analysis" class="section">
+    <div class="month-nav">
+      <button onclick="analysisMonthShift(-1)">&#8592;</button>
+      <span id="analysis-month-label"></span>
+      <button onclick="analysisMonthShift(1)">&#8594;</button>
+    </div>
+    <div class="metric-grid" id="analysis-metrics"></div>
+    <div class="card">
+      <div class="section-title">支出分類</div>
+      <div id="expense-bars"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">收入來源</div>
+      <div id="income-bars"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">近 6 個月趨勢</div>
+      <div class="trend-legend">
+        <span><i style="background:#1D9E75"></i>收入</span>
+        <span><i style="background:#D85A30"></i>支出</span>
+      </div>
+      <div style="position:relative;width:100%;height:180px;">
+        <canvas id="trend-chart" role="img" aria-label="近6個月收支趨勢"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 設定 -->
+  <div id="tab-settings" class="section">
+    <div class="card">
+      <div class="section-title">固定月薪</div>
+      <div class="salary-row">
+        <label>每月薪資 NT$</label>
+        <input type="number" id="salary-input" placeholder="0" inputmode="numeric" oninput="saveSalary()">
+      </div>
+      <div style="font-size:12px;color:#bbb;">設定後自動帶入每月收入</div>
+    </div>
+    <div class="card">
+      <div class="section-title">資料管理</div>
+      <button class="danger-btn" onclick="clearAll()">清除所有記帳資料</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const EXPENSE_CATS = ['餐飲','交通','購物','娛樂','醫療','住房','水電','通訊','保險','其他'];
+const INCOME_CATS = ['薪資','獎金','兼職','投資','其他收入'];
+const STORAGE_KEY = 'budget_records_v2';
+const SALARY_KEY = 'budget_salary';
+
+let currentType = 'expense';
+let analysisMonth = '';
+let trendChart = null;
+
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+function saveRecords(r) { localStorage.setItem(STORAGE_KEY, JSON.stringify(r)); }
+function loadSalary() { return parseInt(localStorage.getItem(SALARY_KEY)) || 0; }
+function saveSalary() {
+  const v = parseInt(document.getElementById('salary-input').value) || 0;
+  localStorage.setItem(SALARY_KEY, v);
+}
+function clearAll() {
+  if (confirm('確定清除所有資料？')) { localStorage.removeItem(STORAGE_KEY); updateAll(); }
+}
+function fmt(n) { return 'NT$' + Math.round(n).toLocaleString(); }
+function getMonthKey(d) { return d.slice(0,7); }
+function thisMonth() { return new Date().toISOString().slice(0,7); }
+
+function setType(t) {
+  currentType = t;
+  document.getElementById('btn-expense').className = 'type-btn' + (t==='expense'?' active-expense':'');
+  document.getElementById('btn-income').className = 'type-btn' + (t==='income'?' active-income':'');
+  updateCatSelect();
+}
+
+function updateCatSelect() {
+  const s = document.getElementById('inp-cat');
+  const cats = currentType === 'expense' ? EXPENSE_CATS : INCOME_CATS;
+  s.innerHTML = cats.map(c => `<option>${c}</option>`).join('');
+}
+
+function addRecord() {
+  const amount = parseFloat(document.getElementById('inp-amount').value);
+  if (!amount || amount <= 0) { alert('請輸入金額'); return; }
+  const cat = document.getElementById('inp-cat').value;
+  const date = document.getElementById('inp-date').value;
+  const note = document.getElementById('inp-note').value.trim();
+  if (!date) { alert('請選擇日期'); return; }
+  const records = loadRecords();
+  records.push({ id: Date.now(), type: currentType, amount, cat, date, note });
+  saveRecords(records);
+  document.getElementById('inp-amount').value = '';
+  document.getElementById('inp-note').value = '';
+  updateAll();
+}
+
+function deleteRecord(id) {
+  saveRecords(loadRecords().filter(r => r.id !== id));
+  updateAll();
+}
+
+function renderSummary() {
+  const records = loadRecords();
+  const m = thisMonth();
+  const salary = loadSalary();
+  const monthRec = records.filter(r => getMonthKey(r.date) === m);
+  let income = monthRec.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  let expense = monthRec.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  if (salary) income = Math.max(income, salary);
+  const balance = income - expense;
+  document.getElementById('summary-metrics').innerHTML = `
+    <div class="metric"><label>本月收入</label><div class="val green">${fmt(income)}</div></div>
+    <div class="metric"><label>本月支出</label><div class="val red">${fmt(expense)}</div></div>
+    <div class="metric"><label>結餘</label><div class="val ${balance>=0?'green':'red'}">${fmt(balance)}</div></div>
+  `;
+}
+
+function populateMonthFilter() {
+  const months = new Set(loadRecords().map(r=>getMonthKey(r.date)));
+  months.add(thisMonth());
+  const sorted = Array.from(months).sort().reverse();
+  const s = document.getElementById('filter-month');
+  const cur = s.value || thisMonth();
+  s.innerHTML = sorted.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m.replace('-','年')}月</option>`).join('');
+}
+
+function renderList() {
+  const fm = document.getElementById('filter-month').value;
+  const ft = document.getElementById('filter-type').value;
+  let filtered = loadRecords().filter(r => getMonthKey(r.date) === fm);
+  if (ft !== 'all') filtered = filtered.filter(r => r.type === ft);
+  filtered.sort((a,b) => b.date.localeCompare(a.date));
+  const el = document.getElementById('record-list');
+  if (!filtered.length) { el.innerHTML = '<div class="empty">這個月沒有記錄</div>'; return; }
+  el.innerHTML = filtered.map(r => `
+    <div class="record-item">
+      <div class="record-dot ${r.type}"></div>
+      <div class="record-info">
+        <div class="name">${r.cat}${r.note?' · '+r.note:''}</div>
+        <div class="meta">${r.date}</div>
+      </div>
+      <div class="record-amount ${r.type}">${r.type==='income'?'+':'-'}${fmt(r.amount)}</div>
+      <button class="del-btn" onclick="deleteRecord(${r.id})" aria-label="刪除">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderAnalysis() {
+  const records = loadRecords();
+  const salary = loadSalary();
+  const m = analysisMonth;
+  document.getElementById('analysis-month-label').textContent = m.replace('-','年') + '月';
+  const monthRec = records.filter(r => getMonthKey(r.date) === m);
+  let income = monthRec.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  let expense = monthRec.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  if (salary && m === thisMonth()) income = Math.max(income, salary);
+  const balance = income - expense;
+  const rate = income > 0 ? Math.round((balance/income)*100) : 0;
+  document.getElementById('analysis-metrics').innerHTML = `
+    <div class="metric"><label>收入</label><div class="val green">${fmt(income)}</div></div>
+    <div class="metric"><label>支出</label><div class="val red">${fmt(expense)}</div></div>
+    <div class="metric"><label>儲蓄率</label><div class="val ${rate>=0?'green':'red'}">${rate}%</div></div>
+  `;
+  renderBars('expense', monthRec, 'expense-bars');
+  renderBars('income', monthRec, 'income-bars');
+  renderTrend(records, salary);
+}
+
+function renderBars(type, records, elId) {
+  const filtered = records.filter(r=>r.type===type);
+  const cats = {};
+  filtered.forEach(r => { cats[r.cat] = (cats[r.cat]||0) + r.amount; });
+  const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const total = sorted.reduce((s,e)=>s+e[1],0);
+  const el = document.getElementById(elId);
+  if (!sorted.length) { el.innerHTML = '<div class="empty" style="padding:0.5rem">無記錄</div>'; return; }
+  el.innerHTML = sorted.map(([cat,amt]) => `
+    <div class="cat-bar-row">
+      <div class="cat-bar-label">${cat}</div>
+      <div class="cat-bar-wrap"><div class="cat-bar-fill ${type}" style="width:${Math.round((amt/total)*100)}%"></div></div>
+      <div class="cat-bar-val">${fmt(amt)}</div>
+    </div>
+  `).join('');
+}
+
+function renderTrend(records, salary) {
+  const months = [];
+  const now = new Date();
+  for (let i=5;i>=0;i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push(d.toISOString().slice(0,7));
+  }
+  const incomes = months.map(m => {
+    let v = records.filter(r=>r.type==='income'&&getMonthKey(r.date)===m).reduce((s,r)=>s+r.amount,0);
+    if (salary && m===thisMonth()) v = Math.max(v, salary);
+    return v;
+  });
+  const expenses = months.map(m =>
+    records.filter(r=>r.type==='expense'&&getMonthKey(r.date)===m).reduce((s,r)=>s+r.amount,0)
+  );
+  if (trendChart) trendChart.destroy();
+  trendChart = new Chart(document.getElementById('trend-chart'), {
+    type: 'line',
+    data: {
+      labels: months.map(m => m.slice(5)+'月'),
+      datasets: [
+        { label: '收入', data: incomes, borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,0.08)', tension: 0.3, pointRadius: 4 },
+        { label: '支出', data: expenses, borderColor: '#D85A30', backgroundColor: 'rgba(216,90,48,0.08)', tension: 0.3, pointRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { callback: v => 'NT$'+v.toLocaleString(), font:{size:10} }, grid: { color: 'rgba(0,0,0,0.06)' } },
+        x: { ticks: { font:{size:11} }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function analysisMonthShift(delta) {
+  const d = new Date(analysisMonth+'-01');
+  d.setMonth(d.getMonth()+delta);
+  analysisMonth = d.toISOString().slice(0,7);
+  renderAnalysis();
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  const tabs = ['record','list','analysis','settings'];
+  document.querySelectorAll('.tab')[tabs.indexOf(t)].classList.add('active');
+  if (t==='list') { populateMonthFilter(); renderList(); }
+  if (t==='analysis') renderAnalysis();
+}
+
+function updateAll() {
+  renderSummary();
+  if (document.getElementById('tab-list').classList.contains('active')) { populateMonthFilter(); renderList(); }
+  if (document.getElementById('tab-analysis').classList.contains('active')) renderAnalysis();
+}
+
+function init() {
+  document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
+  analysisMonth = thisMonth();
+  updateCatSelect();
+  renderSummary();
+  const s = loadSalary();
+  if (s) document.getElementById('salary-input').value = s;
+}
+
+init();
+</script>
+</body>
+</html>
