@@ -102,27 +102,31 @@ input, select { width: 100%; padding: 10px 12px; font-size: 15px; background: #f
 .quick-cat { padding: 7px 14px; border-radius: 20px; border: 1px solid #e0e0d8; background: #f5f5f0; font-size: 13px; cursor: pointer; color: #888; font-family: inherit; }
 .quick-cat.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 .quick-confirm { width: 100%; padding: 14px; font-size: 15px; font-weight: 500; background: #FF8C42; color: #fff; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; }
+.side-menu { position: fixed; top: 0; right: -280px; width: 280px; height: 100vh; background: #fff; z-index: 300; transition: right 0.3s; padding: 60px 20px 20px; box-shadow: -4px 0 20px rgba(0,0,0,0.1); overflow-y: auto; }
+.side-menu.open { right: 0; }
+.menu-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 299; }
+.menu-overlay.open { display: block; }
+.menu-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 22px; cursor: pointer; color: #888; }
+.menu-section { margin-bottom: 24px; }
+.menu-section h3 { font-size: 12px; color: #aaa; font-weight: 500; margin-bottom: 12px; letter-spacing: 0.5px; }
+.menu-input { width: 100%; padding: 10px 12px; font-size: 14px; background: #f5f5f0; border: none; border-radius: 10px; margin-bottom: 8px; outline: none; font-family: inherit; color: #1a1a1a; }
+.menu-btn { width: 100%; padding: 11px; font-size: 14px; font-weight: 500; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; margin-bottom: 6px; }
+.menu-btn.orange { background: #FF8C42; color: #fff; }
+.menu-btn.outline { background: none; border: 1px solid #e0e0d8; color: #888; }
+.menu-btn.danger { background: none; border: 1px solid #D85A30; color: #D85A30; }
+.menu-divider { height: 0.5px; background: #f0f0e8; margin: 16px 0; }
+.menu-info { font-size: 13px; color: #888; line-height: 1.8; }
 </style>
 </head>
 <body>
 
-<!-- 首頁：選擇模式 -->
-<div id="room-screen" class="room-screen">
+<!-- 首頁：輸入名字 -->
+<div id="room-screen" class="room-screen hidden">
   <h2>📒 記帳本</h2>
-  <p>個人記帳，或與朋友建立共同帳本</p>
+  <p>輸入你的名字開始記帳</p>
   <div class="room-card">
-    <h3>個人使用</h3>
     <input class="room-input" id="solo-name" placeholder="你的名字（例：Yota）">
-    <button class="room-btn primary" onclick="startSolo()">單人開始</button>
-  </div>
-  <div class="room-card">
-    <h3>多人共帳</h3>
-    <input class="room-input" id="create-name" placeholder="你的名字">
-    <button class="room-btn orange" onclick="createRoom()">＋ 建立新房間</button>
-    <div style="text-align:center;font-size:12px;color:#ccc;margin:10px 0;">或加入現有房間</div>
-    <input class="room-input" id="join-name" placeholder="你的名字">
-    <input class="room-input" id="join-code" placeholder="4碼房間代碼" maxlength="4" style="text-transform:uppercase;letter-spacing:6px;text-align:center;">
-    <button class="room-btn outline" onclick="joinRoom()">加入房間</button>
+    <button class="room-btn primary" onclick="startSolo()">開始記帳</button>
   </div>
 </div>
 
@@ -137,14 +141,57 @@ input, select { width: 100%; padding: 10px 12px; font-size: 15px; background: #f
   <button class="room-btn orange" onclick="enterApp()" style="width:100%;">進入記帳</button>
 </div>
 
+<!-- 漢堡選單遮罩 -->
+<div class="menu-overlay" id="menu-overlay" onclick="toggleMenu()"></div>
+
+<!-- 側邊選單 -->
+<div class="side-menu" id="side-menu">
+  <button class="menu-close" onclick="toggleMenu()">✕</button>
+
+  <div class="menu-section">
+    <h3>目前狀態</h3>
+    <div class="menu-info" id="menu-status"></div>
+  </div>
+
+  <div class="menu-divider"></div>
+
+  <div class="menu-section" id="menu-solo-section">
+    <h3>單人帳本</h3>
+    <input class="menu-input" id="menu-solo-name" placeholder="帳本名稱（例：Yota）">
+    <button class="menu-btn outline" onclick="menuSwitchSolo()">切換／新增單人帳本</button>
+  </div>
+
+  <div class="menu-divider"></div>
+
+  <div class="menu-section" id="menu-multi-section">
+    <h3>多人共帳</h3>
+    <input class="menu-input" id="menu-create-name" placeholder="你的名字">
+    <button class="menu-btn orange" onclick="menuCreateRoom()">＋ 建立新房間</button>
+    <div style="text-align:center;font-size:12px;color:#ccc;margin:8px 0;">或加入現有房間</div>
+    <input class="menu-input" id="menu-join-name" placeholder="你的名字">
+    <input class="menu-input" id="menu-join-code" placeholder="4碼房間代碼" maxlength="4" style="text-transform:uppercase;letter-spacing:6px;text-align:center;">
+    <button class="menu-btn outline" onclick="menuJoinRoom()">加入房間</button>
+  </div>
+
+  <div id="menu-leave-section" style="display:none;">
+    <div class="menu-divider"></div>
+    <button class="menu-btn danger" onclick="leaveRoom()">離開多人房間</button>
+  </div>
+</div>
+
 <!-- 主畫面 -->
 <div id="main-app" style="display:none;">
   <div class="header">
     <div class="header-top">
       <h1>記帳本</h1>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
         <span><span class="sync-dot" id="sync-dot"></span><span id="sync-label" style="font-size:11px;color:#aaa;">連線中</span></span>
         <span class="room-badge" id="room-badge">個人</span>
+        <button id="menu-btn" onclick="toggleMenu()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;flex-direction:column;gap:4px;" aria-label="選單">
+          <span style="width:18px;height:2px;background:#1a1a1a;display:block;border-radius:2px;"></span>
+          <span style="width:18px;height:2px;background:#1a1a1a;display:block;border-radius:2px;"></span>
+          <span style="width:18px;height:2px;background:#1a1a1a;display:block;border-radius:2px;"></span>
+        </button>
       </div>
     </div>
     <div class="tab-bar">
@@ -306,6 +353,114 @@ const getMonthKey = d => d.slice(0,7);
 const thisMonth = () => new Date().toISOString().slice(0,7);
 const loadSalary = () => parseInt(localStorage.getItem('budget_salary')) || 0;
 
+// 漢堡選單
+window.toggleMenu = () => {
+  const menu = document.getElementById('side-menu');
+  const overlay = document.getElementById('menu-overlay');
+  const isOpen = menu.classList.contains('open');
+  menu.classList.toggle('open');
+  overlay.classList.toggle('open');
+  if (!isOpen) updateMenuStatus();
+};
+
+function updateMenuStatus() {
+  const el = document.getElementById('menu-status');
+  const leaveSection = document.getElementById('menu-leave-section');
+  const multiSection = document.getElementById('menu-multi-section');
+  if (isMulti) {
+    el.innerHTML = `模式：多人房間<br>房間代碼：<strong>${roomId}</strong><br>名字：${userName}`;
+    leaveSection.style.display = 'block';
+    multiSection.style.display = 'none';
+  } else {
+    el.innerHTML = `模式：個人記帳<br>名字：${userName}`;
+    leaveSection.style.display = 'none';
+    multiSection.style.display = 'block';
+    document.getElementById('menu-create-name').value = userName;
+    document.getElementById('menu-join-name').value = userName;
+  }
+  document.getElementById('menu-solo-name').value = '';
+}
+
+window.menuCreateRoom = () => {
+  const name = document.getElementById('menu-create-name').value.trim();
+  if (!name) { alert('請輸入名字'); return; }
+  if (unsubscribeFn) unsubscribeFn();
+  userName = name; isMulti = true;
+  roomId = genCode();
+  dbRef = ref(db, 'rooms/' + roomId + '/records');
+  document.getElementById('room-badge').textContent = '房間 ' + roomId;
+  document.getElementById('room-info-card').innerHTML = `房間代碼：<strong>${roomId}</strong><br>你的名字：${userName}`;
+  toggleMenu();
+  startListening();
+  alert('房間建立成功！\n代碼：' + roomId + '\n把代碼分享給朋友讓他們加入');
+};
+
+window.menuJoinRoom = () => {
+  const name = document.getElementById('menu-join-name').value.trim();
+  const code = document.getElementById('menu-join-code').value.trim().toUpperCase();
+  if (!name || code.length !== 4) { alert('請輸入名字和4碼房間代碼'); return; }
+  if (unsubscribeFn) unsubscribeFn();
+  userName = name; isMulti = true; roomId = code;
+  dbRef = ref(db, 'rooms/' + code + '/records');
+  document.getElementById('room-badge').textContent = '房間 ' + roomId;
+  document.getElementById('room-info-card').innerHTML = `房間代碼：<strong>${roomId}</strong><br>你的名字：${userName}`;
+  toggleMenu();
+  startListening();
+};
+
+window.menuSwitchSolo = () => {
+  const name = document.getElementById('menu-solo-name').value.trim();
+  if (!name) { alert('請輸入帳本名稱'); return; }
+  if (unsubscribeFn) unsubscribeFn();
+  isMulti = false; userName = name;
+  localStorage.setItem('last_user_name', name);
+  const storageKey = 'solo_room_id_' + name;
+  let savedId = localStorage.getItem(storageKey);
+  if (!savedId) {
+    savedId = 'solo_' + name + '_' + Date.now();
+    localStorage.setItem(storageKey, savedId);
+    alert('已建立新帳本：' + name);
+  } else {
+    alert('已切換到帳本：' + name);
+  }
+  roomId = savedId;
+  dbRef = ref(db, 'rooms/' + roomId + '/records');
+  document.getElementById('room-badge').textContent = '個人';
+  document.getElementById('room-info-card').innerHTML = '個人使用 · ' + userName;
+  toggleMenu();
+  startListening();
+};
+
+// 返回鍵處理
+const tabHistory = ['record'];
+const tabOrder = ['record','list','analysis','split','settings'];
+
+function pushTabHistory(t) {
+  if (tabHistory[tabHistory.length-1] !== t) tabHistory.push(t);
+  history.pushState({ tab: t }, '', '');
+}
+
+window.addEventListener('popstate', (e) => {
+  if (document.getElementById('side-menu').classList.contains('open')) {
+    toggleMenu(); history.pushState({}, '', ''); return;
+  }
+  if (document.getElementById('quick-overlay').classList.contains('open')) {
+    document.getElementById('quick-overlay').classList.remove('open');
+    history.pushState({}, '', ''); return;
+  }
+  tabHistory.pop();
+  const prev = tabHistory[tabHistory.length-1] || 'record';
+  // 直接切換不推歷史
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+prev).classList.add('active');
+  tabOrder.forEach((name,i) => { if(name===prev) document.querySelectorAll('.tab')[i].classList.add('active'); });
+  if (prev==='list') { populateMonthFilter(); renderList(); }
+  if (prev==='analysis') renderAnalysis();
+  if (prev==='split') renderSplit();
+  if (tabHistory.length === 0) tabHistory.push('record');
+});
+
 window.saveSalary = () => {
   localStorage.setItem('budget_salary', parseInt(document.getElementById('salary-input').value) || 0);
 };
@@ -323,7 +478,9 @@ function startListening() {
 }
 
 window.startSolo = () => {
-  const name = document.getElementById('solo-name').value.trim() || '我';
+  const inputName = document.getElementById('solo-name').value.trim();
+  const name = inputName || localStorage.getItem('last_user_name') || '我';
+  localStorage.setItem('last_user_name', name);
   userName = name; isMulti = false;
   // 用名字當 key，讀取上次的 roomId，沒有才產生新的
   const storageKey = 'solo_room_id_' + name;
@@ -336,6 +493,26 @@ window.startSolo = () => {
   dbRef = ref(db, 'rooms/' + roomId + '/records');
   startListening(); enterApp();
 };
+
+// 有上次記錄直接自動登入
+(function autoLogin() {
+  const last = localStorage.getItem('last_user_name');
+  if (last) {
+    // 直接用上次名字登入，跳過首頁
+    const storageKey = 'solo_room_id_' + last;
+    let savedId = localStorage.getItem(storageKey);
+    if (!savedId) {
+      savedId = 'solo_' + last + '_' + Date.now();
+      localStorage.setItem(storageKey, savedId);
+    }
+    userName = last; isMulti = false; roomId = savedId;
+    dbRef = ref(db, 'rooms/' + roomId + '/records');
+    startListening(); enterApp();
+  } else {
+    // 第一次使用，顯示首頁
+    document.getElementById('room-screen').classList.remove('hidden');
+  }
+})();
 
 window.createRoom = () => {
   const name = document.getElementById('create-name').value.trim();
@@ -360,7 +537,6 @@ window.joinRoom = () => {
 
 window.enterApp = () => {
   document.getElementById('room-screen').classList.add('hidden');
-  document.getElementById('room-code-screen').classList.add('hidden');
   document.getElementById('main-app').style.display = 'block';
   document.getElementById('quick-fab').style.display = 'flex';
   document.getElementById('room-badge').textContent = isMulti ? '房間 ' + roomId : '個人';
@@ -372,6 +548,8 @@ window.enterApp = () => {
   document.getElementById('room-info-card').innerHTML = isMulti
     ? `房間代碼：<strong>${roomId}</strong><br>你的名字：${userName}`
     : `個人使用 · ${userName}`;
+  // 初始化返回鍵歷史
+  history.replaceState({ tab: 'record' }, '', '');
 };
 
 window.leaveRoom = () => {
@@ -556,6 +734,7 @@ window.switchTab = t => {
   if (t==='list') { populateMonthFilter(); renderList(); }
   if (t==='analysis') renderAnalysis();
   if (t==='split') renderSplit();
+  pushTabHistory(t);
 };
 
 function updateAll() {
