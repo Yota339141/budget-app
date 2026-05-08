@@ -494,11 +494,10 @@ window.startSolo = () => {
   startListening(); enterApp();
 };
 
-// 有上次記錄直接自動登入
-(function autoLogin() {
+// 有上次記錄直接自動登入（等 Firebase 準備好再執行）
+function autoLogin() {
   const last = localStorage.getItem('last_user_name');
   if (last) {
-    // 直接用上次名字登入，跳過首頁
     const storageKey = 'solo_room_id_' + last;
     let savedId = localStorage.getItem(storageKey);
     if (!savedId) {
@@ -509,10 +508,16 @@ window.startSolo = () => {
     dbRef = ref(db, 'rooms/' + roomId + '/records');
     startListening(); enterApp();
   } else {
-    // 第一次使用，顯示首頁
     document.getElementById('room-screen').classList.remove('hidden');
   }
-})();
+}
+
+// 確保 DOM 和 Firebase 都準備好才執行
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', autoLogin);
+} else {
+  autoLogin();
+}
 
 window.createRoom = () => {
   const name = document.getElementById('create-name').value.trim();
