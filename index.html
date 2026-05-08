@@ -102,6 +102,13 @@ input, select { width: 100%; padding: 10px 12px; font-size: 15px; background: #f
 .quick-cat { padding: 7px 14px; border-radius: 20px; border: 1px solid #e0e0d8; background: #f5f5f0; font-size: 13px; cursor: pointer; color: #888; font-family: inherit; }
 .quick-cat.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 .quick-confirm { width: 100%; padding: 14px; font-size: 15px; font-weight: 500; background: #FF8C42; color: #fff; border: none; border-radius: 12px; cursor: pointer; font-family: inherit; }
+.loading-screen { position: fixed; inset: 0; background: #f5f5f0; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.loading-screen.hidden { display: none; }
+.spinner { width: 36px; height: 36px; border: 3px solid #e0e0d8; border-top-color: #FF8C42; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-screen p { font-size: 14px; color: #888; }
+.loading-screen .err { font-size: 13px; color: #D85A30; text-align: center; padding: 0 32px; line-height: 1.6; display: none; }
+.loading-screen button { padding: 10px 24px; background: #FF8C42; color: #fff; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: inherit; display: none; }
 .side-menu { position: fixed; top: 0; right: -280px; width: 280px; height: 100vh; background: #fff; z-index: 300; transition: right 0.3s; padding: 60px 20px 20px; box-shadow: -4px 0 20px rgba(0,0,0,0.1); overflow-y: auto; }
 .side-menu.open { right: 0; }
 .menu-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 299; }
@@ -119,6 +126,14 @@ input, select { width: 100%; padding: 10px 12px; font-size: 15px; background: #f
 </style>
 </head>
 <body>
+
+<!-- 載入畫面 -->
+<div id="loading-screen" class="loading-screen">
+  <div class="spinner"></div>
+  <p id="loading-text">載入中...</p>
+  <div class="err" id="loading-err"></div>
+  <button id="loading-retry" onclick="location.reload()">重新載入</button>
+</div>
 
 <!-- 首頁：輸入名字 -->
 <div id="room-screen" class="room-screen hidden">
@@ -469,11 +484,15 @@ function genCode() { return Math.random().toString(36).substring(2,6).toUpperCas
 
 function startListening() {
   if (unsubscribeFn) unsubscribeFn();
-  document.getElementById('sync-dot').className = 'sync-dot online';
-  document.getElementById('sync-label').textContent = '已連線';
   unsubscribeFn = onValue(dbRef, snap => {
     records = snap.val() || {};
+    const dot = document.getElementById('sync-dot');
+    const label = document.getElementById('sync-label');
+    if (dot) { dot.className = 'sync-dot online'; }
+    if (label) label.textContent = '已連線';
     updateAll();
+  }, err => {
+    showLoadingError('資料庫連線失敗：' + err.message);
   });
 }
 
@@ -496,27 +515,52 @@ window.startSolo = () => {
 
 // 有上次記錄直接自動登入（等 Firebase 準備好再執行）
 function autoLogin() {
-  const last = localStorage.getItem('last_user_name');
-  if (last) {
-    const storageKey = 'solo_room_id_' + last;
-    let savedId = localStorage.getItem(storageKey);
-    if (!savedId) {
-      savedId = 'solo_' + last + '_' + Date.now();
-      localStorage.setItem(storageKey, savedId);
+  try {
+    const last = localStorage.getItem('last_user_name');
+    if (last) {
+      const storageKey = 'solo_room_id_' + last;
+      let savedId = localStorage.getItem(storageKey);
+      if (!savedId) {
+        savedId = 'solo_' + last + '_' + Date.now();
+        localStorage.setItem(storageKey, savedId);
+      }
+      userName = last; isMulti = false; roomId = savedId;
+      dbRef = ref(db, 'rooms/' + roomId + '/records');
+      startListening(); enterApp();
+    } else {
+      hideLoading();
+      document.getElementById('room-screen').classList.remove('hidden');
     }
-    userName = last; isMulti = false; roomId = savedId;
-    dbRef = ref(db, 'rooms/' + roomId + '/records');
-    startListening(); enterApp();
-  } else {
-    document.getElementById('room-screen').classList.remove('hidden');
+  } catch(e) {
+    showLoadingError('載入失敗：' + e.message);
   }
 }
 
-// 確保 DOM 和 Firebase 都準備好才執行
+function hideLoading() {
+  document.getElementById('loading-screen').classList.add('hidden');
+}
+
+function showLoadingError(msg) {
+  const el = document.getElementById('loading-err');
+  const btn = document.getElementById('loading-retry');
+  const text = document.getElementById('loading-text');
+  const spinner = document.querySelector('.spinner');
+  if (spinner) spinner.style.display = 'none';
+  if (text) text.style.display = 'none';
+  el.style.display = 'block';
+  el.textContent = msg + '\n\n請確認網路連線後重試';
+  btn.style.display = 'block';
+}
+
+// 確保 Firebase 載入完才執行，加 timeout 偵測卡住
+const loginTimer = setTimeout(() => {
+  showLoadingError('連線逾時，可能是網路問題或 Firebase 未回應');
+}, 8000);
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', autoLogin);
+  document.addEventListener('DOMContentLoaded', () => { clearTimeout(loginTimer); autoLogin(); });
 } else {
-  autoLogin();
+  clearTimeout(loginTimer); autoLogin();
 }
 
 window.createRoom = () => {
@@ -542,6 +586,7 @@ window.joinRoom = () => {
 
 window.enterApp = () => {
   document.getElementById('room-screen').classList.add('hidden');
+  hideLoading();
   document.getElementById('main-app').style.display = 'block';
   document.getElementById('quick-fab').style.display = 'flex';
   document.getElementById('room-badge').textContent = isMulti ? '房間 ' + roomId : '個人';
