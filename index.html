@@ -552,16 +552,7 @@ function showLoadingError(msg) {
   btn.style.display = 'block';
 }
 
-// 確保 Firebase 載入完才執行，加 timeout 偵測卡住
-const loginTimer = setTimeout(() => {
-  showLoadingError('連線逾時，可能是網路問題或 Firebase 未回應');
-}, 8000);
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => { clearTimeout(loginTimer); autoLogin(); });
-} else {
-  clearTimeout(loginTimer); autoLogin();
-}
 
 window.createRoom = () => {
   const name = document.getElementById('create-name').value.trim();
@@ -815,6 +806,32 @@ window.confirmQuick = () => {
   push(dbRef, { type:'expense', amount, cat:quickCat, date:new Date().toISOString().slice(0,10), note:'', user:userName, ts:Date.now() });
   document.getElementById('quick-overlay').classList.remove('open');
 };
+
+// 在 module 內啟動，確保所有函式都已定義
+const loginTimer = setTimeout(() => {
+  showLoadingError('連線逾時，可能是網路問題或 Firebase 未回應');
+}, 8000);
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { clearTimeout(loginTimer); autoLogin(); });
+} else {
+  clearTimeout(loginTimer); autoLogin();
+}
+// 啟動：確保 Firebase 載入完才執行
+const loginTimer = setTimeout(() => {
+  showLoadingError('連線逾時，可能是網路問題或 Firebase 未回應');
+}, 8000);
+
+function boot() {
+  clearTimeout(loginTimer);
+  autoLogin();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
 </script>
 </body>
 </html>
