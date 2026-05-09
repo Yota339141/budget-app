@@ -269,7 +269,7 @@ const TABS = ['record','list','analysis','split','settings'];
 
 let curType = 'expense', aMonth = '', tChart = null, qCat = '購物';
 let roomId = '', userName = '', isMulti = false;
-let records = {}, dbRef = null, unsub = null;
+let records = {}, dbRef = null;
 
 // Firebase 初始化
 firebase.initializeApp({
@@ -321,9 +321,12 @@ function doSoloLogin(name) {
   enterApp();
 }
 
+function stopListening() {
+  if (dbRef) dbRef.off('value');
+}
 function startListening() {
-  if (unsub) unsub();
-  unsub = dbRef.on('value', snap => {
+  stopListening();
+  dbRef.on('value', snap => {
     records = snap.val() || {};
     document.getElementById('sync-dot').className = 'sync-dot online';
     document.getElementById('sync-label').textContent = '已連線';
@@ -531,7 +534,7 @@ function closeMenu() {
 function menuSwitchSolo() {
   const name = document.getElementById('menu-solo-name').value.trim();
   if (!name) { alert('請輸入帳本名稱'); return; }
-  if (unsub) unsub();
+  stopListening();
   records = {};
   closeMenu();
   doSoloLogin(name);
@@ -539,7 +542,7 @@ function menuSwitchSolo() {
 function menuCreateRoom() {
   const name = document.getElementById('menu-create-name').value.trim();
   if (!name) { alert('請輸入名字'); return; }
-  if (unsub) unsub();
+  stopListening();
   userName = name; isMulti = true; roomId = genCode();
   dbRef = db.ref('rooms/'+roomId+'/records');
   document.getElementById('room-badge').textContent = '房間 '+roomId;
@@ -552,7 +555,7 @@ function menuJoinRoom() {
   const name = document.getElementById('menu-join-name').value.trim();
   const code = document.getElementById('menu-join-code').value.trim().toUpperCase();
   if (!name||code.length!==4) { alert('請輸入名字和4碼代碼'); return; }
-  if (unsub) unsub();
+  stopListening();
   userName=name; isMulti=true; roomId=code;
   dbRef=db.ref('rooms/'+code+'/records');
   document.getElementById('room-badge').textContent='房間 '+roomId;
@@ -561,7 +564,7 @@ function menuJoinRoom() {
 }
 function leaveRoom() {
   if (!isMulti) return;
-  if (unsub) unsub();
+  stopListening();
   records={};
   const name=userName;
   isMulti=false;
