@@ -559,15 +559,23 @@ function menuSwitchSolo() {
 }
 function menuCreateRoom() {
   const name = document.getElementById('menu-create-name').value.trim();
+  const rname = document.getElementById('menu-room-name').value.trim() || ('房間 '+genCode().slice(0,2));
   if (!name) { alert('請輸入名字'); return; }
   stopListening();
-  userName = name; isMulti = true; roomId = genCode();
+  userName = name; isMulti = true; roomId = genCode(); roomName = rname;
+  localStorage.setItem('last_mode', 'multi');
+  localStorage.setItem('last_room_id', roomId);
+  localStorage.setItem('last_room_name', roomName);
+  localStorage.setItem('last_user_name', name);
   dbRef = db.ref('rooms/'+roomId+'/records');
-  document.getElementById('room-badge').textContent = '房間 '+roomId;
-  document.getElementById('room-info-card').innerHTML = `房間代碼：<strong>${roomId}</strong><br>名字：${userName}`;
+  db.ref('rooms/'+roomId+'/meta').set({ name: roomName, host: name, created: Date.now() });
+  updateRoomUI();
   closeMenu();
   startListening();
-  alert('房間建立成功！\n代碼：'+roomId+'\n把代碼分享給朋友加入');
+  alert('房間建立成功！
+名稱：'+roomName+'
+代碼：'+roomId+'
+把代碼分享給朋友加入');
 }
 function menuJoinRoom() {
   const name = document.getElementById('menu-join-name').value.trim();
