@@ -153,6 +153,7 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
   <div class="menu-sec" id="menu-multi-sec">
     <h3>多人共帳</h3>
     <input class="menu-input" id="menu-create-name" placeholder="你的名字">
+    <input class="menu-input" id="menu-room-name" placeholder="房間名稱（例：日本旅遊）">
     <button class="menu-btn orange" onclick="menuCreateRoom()">＋ 建立新房間</button>
     <div style="text-align:center;font-size:12px;color:#ccc;margin:8px 0">或</div>
     <input class="menu-input" id="menu-join-name" placeholder="你的名字">
@@ -268,8 +269,18 @@ const ICATS = ['薪資','獎金','兼職','投資','其他收入'];
 const TABS = ['record','list','analysis','split','settings'];
 
 let curType = 'expense', aMonth = '', tChart = null, qCat = '購物';
-let roomId = '', userName = '', isMulti = false;
+let roomId = '', roomName = '', userName = '', isMulti = false;
 let records = {}, dbRef = null;
+
+function updateRoomUI() {
+  const badge = isMulti ? (roomName||roomId) : '個人';
+  const el = document.getElementById('room-badge');
+  if (el) el.textContent = badge;
+  const info = document.getElementById('room-info-card');
+  if (info) info.innerHTML = isMulti
+    ? `房間名稱：<strong>${roomName}</strong><br>房間代碼：<strong>${roomId}</strong><br>名字：${userName}`
+    : `個人使用 · ${userName}`;
+}
 
 // Firebase 初始化
 firebase.initializeApp({
@@ -312,6 +323,7 @@ function startSolo() {
 function doSoloLogin(name) {
   userName = name; isMulti = false;
   localStorage.setItem('last_user_name', name);
+  localStorage.setItem('last_mode', 'solo');
   const key = 'solo_room_' + name;
   let rid = localStorage.getItem(key);
   if (!rid) { rid = 'solo_' + name + '_' + Date.now(); localStorage.setItem(key, rid); }
@@ -339,28 +351,34 @@ function enterApp() {
   document.getElementById('room-screen').classList.add('hidden');
   document.getElementById('main-app').classList.remove('hidden');
   document.getElementById('quick-fab').classList.remove('hidden');
-  document.getElementById('room-badge').textContent = isMulti ? '房間 ' + roomId : '個人';
+  updateRoomUI();
   const s = salary(); if (s) document.getElementById('salary-input').value = s;
   aMonth = now();
   document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
   updateCatSelect(); renderQCats();
-  document.getElementById('room-info-card').innerHTML = isMulti
-    ? `房間代碼：<strong>${roomId}</strong><br>名字：${userName}`
-    : `個人使用 · ${userName}`;
   history.replaceState({tab:'record'}, '', '');
 }
 
 // 自動登入
 window.addEventListener('load', () => {
-  const last = localStorage.getItem('last_user_name');
-  if (last) {
-    doSoloLogin(last);
+  const lastName = localStorage.getItem('last_user_name');
+  const lastMode = localStorage.getItem('last_mode');
+  const lastRoomId = localStorage.getItem('last_room_id');
+  const lastRoomName = localStorage.getItem('last_room_name') || lastRoomId;
+
+  if (lastName && lastMode === 'multi' && lastRoomId) {
+    // 自動回到多人房間
+    userName = lastName; isMulti = true; roomId = lastRoomId; roomName = lastRoomName;
+    dbRef = db.ref('rooms/'+roomId+'/records');
+    updateRoomUI();
+    startListening();
+    enterApp();
+  } else if (lastName) {
+    // 自動回到單人帳本
+    doSoloLogin(lastName);
   } else {
     hideLoading();
     document.getElementById('room-screen').classList.remove('hidden');
-    // 嘗試抓上次名字填入
-    const prev = localStorage.getItem('last_user_name');
-    if (prev) document.getElementById('solo-name').value = prev;
   }
 });
 
@@ -520,7 +538,7 @@ function openMenu() {
   document.getElementById('side-menu').classList.add('open');
   document.getElementById('menu-overlay').classList.add('open');
   document.getElementById('menu-status').innerHTML = isMulti
-    ? `模式：多人<br>房間：<strong>${roomId}</strong><br>名字：${userName}`
+    ? `模式：多人<br>名稱：<strong>${roomName||roomId}</strong><br>代碼：${roomId}<br>名字：${userName}`
     : `模式：個人<br>名字：${userName}`;
   document.getElementById('menu-leave-sec').classList.toggle('hidden', !isMulti);
   document.getElementById('menu-multi-sec').classList.toggle('hidden', isMulti);
@@ -557,9 +575,16 @@ function menuJoinRoom() {
   if (!name||code.length!==4) { alert('請輸入名字和4碼代碼'); return; }
   stopListening();
   userName=name; isMulti=true; roomId=code;
+  localStorage.setItem('last_mode', 'multi');
+  localStorage.setItem('last_room_id', roomId);
+  localStorage.setItem('last_user_name', name);
   dbRef=db.ref('rooms/'+code+'/records');
-  document.getElementById('room-badge').textContent='房間 '+roomId;
-  document.getElementById('room-info-card').innerHTML=`房間代碼：<strong>${roomId}</strong><br>名字：${userName}`;
+  // 讀取房間名稱
+  db.ref('rooms/'+code+'/meta/name').once('value').then(snap => {
+    roomName = snap.val() || roomId;
+    localStorage.setItem('last_room_name', roomName);
+    updateRoomUI();
+  });
   closeMenu(); startListening();
 }
 function leaveRoom() {
@@ -568,6 +593,9 @@ function leaveRoom() {
   records={};
   const name=userName;
   isMulti=false;
+  localStorage.setItem('last_mode', 'solo');
+  localStorage.removeItem('last_room_id');
+  localStorage.removeItem('last_room_name');
   closeMenu();
   doSoloLogin(name);
 }
