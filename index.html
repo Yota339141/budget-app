@@ -366,17 +366,45 @@ window.addEventListener('load', () => {
   const lastRoomId = localStorage.getItem('last_room_id');
   const lastRoomName = localStorage.getItem('last_room_name') || lastRoomId;
 
+  // 保險：8秒沒進去就強制顯示首頁
+  const safeTimer = setTimeout(() => {
+    if (document.getElementById('loading-screen') &&
+        !document.getElementById('loading-screen').classList.contains('hidden')) {
+      hideLoading();
+      // 清除多人狀態，避免下次又卡
+      localStorage.setItem('last_mode', 'solo');
+      localStorage.removeItem('last_room_id');
+      localStorage.removeItem('last_room_name');
+      if (lastName) {
+        doSoloLogin(lastName);
+      } else {
+        document.getElementById('room-screen').classList.remove('hidden');
+      }
+    }
+  }, 8000);
+
   if (lastName && lastMode === 'multi' && lastRoomId) {
-    // 自動回到多人房間
+    // 自動回到多人房間，但先檢查房間是否存在
     userName = lastName; isMulti = true; roomId = lastRoomId; roomName = lastRoomName;
     dbRef = db.ref('rooms/'+roomId+'/records');
-    updateRoomUI();
-    startListening();
-    enterApp();
+    // 用 once 先確認房間存在再 startListening
+    db.ref('rooms/'+roomId).once('value').then(snap => {
+      clearTimeout(safeTimer);
+      updateRoomUI();
+      startListening();
+      enterApp();
+    }).catch(() => {
+      clearTimeout(safeTimer);
+      // 房間不存在，改回單人
+      localStorage.setItem('last_mode', 'solo');
+      localStorage.removeItem('last_room_id');
+      doSoloLogin(lastName);
+    });
   } else if (lastName) {
-    // 自動回到單人帳本
+    clearTimeout(safeTimer);
     doSoloLogin(lastName);
   } else {
+    clearTimeout(safeTimer);
     hideLoading();
     document.getElementById('room-screen').classList.remove('hidden');
   }
