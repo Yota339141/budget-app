@@ -123,6 +123,7 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
 <div id="loading-screen">
   <div class="spinner"></div>
   <div id="loading-msg">載入中...</div>
+  <div id="loading-step" style="font-size:11px;color:#bbb;margin-top:4px"></div>
   <div id="loading-err" class="hidden"></div>
   <button id="loading-retry" class="hidden" onclick="location.reload()">重新載入</button>
 </div>
@@ -283,6 +284,8 @@ function updateRoomUI() {
 }
 
 // Firebase 初始化
+document.getElementById('loading-step').textContent = '步驟1：Firebase SDK 載入中';
+try {
 firebase.initializeApp({
   apiKey: "AIzaSyAExM8OPwQ8iM-sNWk5q1B4g64kflxivHU",
   authDomain: "budget-app-5bed4.firebaseapp.com",
@@ -292,7 +295,12 @@ firebase.initializeApp({
   messagingSenderId: "526050928979",
   appId: "1:526050928979:web:347401d2d82603808cd9a6"
 });
+} catch(e) {
+  document.getElementById('loading-step').textContent = '❌ Firebase 初始化失敗：' + e.message;
+}
+document.getElementById('loading-step').textContent = '步驟2：資料庫連線中';
 const db = firebase.database();
+document.getElementById('loading-step').textContent = '步驟3：等待載入事件';
 
 // 工具
 const fmt = n => 'NT$' + Math.round(n).toLocaleString();
@@ -361,6 +369,7 @@ function enterApp() {
 
 // 自動登入
 window.addEventListener('load', () => {
+  document.getElementById('loading-step').textContent = '步驟4：自動登入中';
   const lastName = localStorage.getItem('last_user_name');
   const lastMode = localStorage.getItem('last_mode');
   const lastRoomId = localStorage.getItem('last_room_id');
