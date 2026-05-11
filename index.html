@@ -265,6 +265,29 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
+// 全域錯誤捕捉
+window.onerror = function(msg, src, line, col, err) {
+  var el = document.getElementById('loading-err');
+  var btn = document.getElementById('loading-retry');
+  var sp = document.querySelector('.spinner');
+  var mg = document.getElementById('loading-msg');
+  if(sp) sp.style.display='none';
+  if(mg) mg.style.display='none';
+  if(el){ el.classList.remove('hidden'); el.textContent='JS錯誤：'+msg+' (行'+line+')'; }
+  if(btn) btn.classList.remove('hidden');
+  return true;
+};
+window.onunhandledrejection = function(e) {
+  var el = document.getElementById('loading-err');
+  var btn = document.getElementById('loading-retry');
+  var sp = document.querySelector('.spinner');
+  var mg = document.getElementById('loading-msg');
+  if(sp) sp.style.display='none';
+  if(mg) mg.style.display='none';
+  if(el){ el.classList.remove('hidden'); el.textContent='Promise錯誤：'+(e.reason&&e.reason.message||e.reason); }
+  if(btn) btn.classList.remove('hidden');
+};
+
 const ECATS = ['餐飲','購物','交通','娛樂','醫療','住房','水電','通訊','保險','其他'];
 const ICATS = ['薪資','獎金','兼職','投資','其他收入'];
 const TABS = ['record','list','analysis','split','settings'];
