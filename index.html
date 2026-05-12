@@ -124,6 +124,17 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
 .mbtn.danger{background:none;border:1px solid #D85A30;color:#D85A30}
 .mdiv{height:.5px;background:#f0f0e8;margin:14px 0}
 .minfo{font-size:13px;color:#888;line-height:1.8}
+.hlist{display:flex;flex-direction:column;gap:6px}
+.hitem{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#f5f5f0;border-radius:10px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.hitem:active{background:#e8e8e0}
+.hitem.current{background:#FF8C421a;border:1px solid #FF8C4240}
+.hitem-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.hitem-icon{font-size:14px;flex-shrink:0}
+.hitem-name{font-size:14px;color:#1a1a1a;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hitem-badge{font-size:10px;color:#FF8C42;background:#FF8C421a;padding:2px 6px;border-radius:8px;flex-shrink:0}
+.hitem-del{background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;padding:4px;flex-shrink:0;display:none}
+.hlist.edit-mode .hitem-del{display:block}
+.hedit-btn{font-size:11px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px 0;font-family:inherit;margin-top:4px}
 </style>
 </head>
 <body>
@@ -150,6 +161,14 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
   <div class="msec">
     <h3>目前狀態</h3>
     <div class="minfo" id="menu-info"></div>
+  </div>
+  <div class="mdiv"></div>
+  <div class="msec">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h3 style="margin-bottom:0">歷史帳本</h3>
+      <button class="hedit-btn" id="hedit-btn" onclick="toggleEditMode()">長按可刪除</button>
+    </div>
+    <div class="hlist" id="hlist"></div>
   </div>
   <div class="mdiv"></div>
   <div class="msec">
@@ -336,6 +355,107 @@ const sal=()=>parseInt(localStorage.getItem('sal'))||0;
 const arr=()=>Object.entries(recs).map(([id,r])=>({...r,id}));
 const genCode=()=>Math.random().toString(36).substring(2,6).toUpperCase();
 
+// 歷史帳本管理
+const HISTORY_KEY = 'acct_history';
+let editMode = false;
+let longPressTimer = null;
+
+function getHistory(){
+  try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+  catch{ return []; }
+}
+
+function saveHistory(h){ localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
+
+function addToHistory(name, rid, type){
+  const h = getHistory();
+  // 移除舊的同名記錄
+  const filtered = h.filter(x => x.rid !== rid);
+  // 加到最前面
+  filtered.unshift({ name, rid, type, ts: Date.now() });
+  // 最多保留 20 筆
+  saveHistory(filtered.slice(0, 20));
+}
+
+function removeFromHistory(rid){
+  saveHistory(getHistory().filter(x => x.rid !== rid));
+  renderHistory();
+}
+
+function toggleEditMode(){
+  editMode = !editMode;
+  const list = document.getElementById('hlist');
+  if(list) list.classList.toggle('edit-mode', editMode);
+  const btn = document.getElementById('hedit-btn');
+  if(btn) btn.textContent = editMode ? '完成' : '長按可刪除';
+}
+
+function renderHistory(){
+  const h = getHistory();
+  const el = document.getElementById('hlist');
+  if(!el) return;
+  if(!h.length){ el.innerHTML='<div style="font-size:13px;color:#bbb;text-align:center;padding:8px">尚無歷史帳本</div>'; return; }
+  el.innerHTML = h.map(item => {
+    const isCurrent = item.rid === roomId;
+    const icon = item.type === 'multi' ? '👥' : '👤';
+    return `<div class="hitem ${isCurrent?'current':''}" 
+      onclick="switchToHistory('${item.rid}','${item.name}','${item.type}')"
+      oncontextmenu="return false">
+      <div class="hitem-left">
+        <span class="hitem-icon">${icon}</span>
+        <span class="hitem-name">${item.name}</span>
+        ${isCurrent?'<span class="hitem-badge">目前</span>':''}
+      </div>
+      <button class="hitem-del" onclick="event.stopPropagation();removeFromHistory('${item.rid}')">✕</button>
+    </div>`;
+  }).join('');
+
+  // 長按刪除
+  el.querySelectorAll('.hitem').forEach(item => {
+    item.addEventListener('touchstart', () => {
+      longPressTimer = setTimeout(() => {
+        editMode = true;
+        el.classList.add('edit-mode');
+        document.getElementById('hedit-btn').textContent = '完成';
+      }, 600);
+    });
+    item.addEventListener('touchend', () => clearTimeout(longPressTimer));
+    item.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+  });
+}
+
+function switchToHistory(rid, name, type){
+  if(editMode) return;
+  if(rid === roomId){ closeMenu(); return; }
+  if(dbRef) dbRef.off('value');
+  recs = {};
+  if(type === 'multi'){
+    // 切換到多人房間
+    isMulti = true; roomId = rid; roomName = name;
+    // 從 localStorage 找 userName
+    uname = localStorage.getItem('lu') || uname;
+    localStorage.setItem('lm','multi');
+    localStorage.setItem('lrid', rid);
+    localStorage.setItem('lrn', name);
+    dbRef = db.ref('rooms/'+rid+'/records');
+  } else {
+    // 切換到單人帳本
+    isMulti = false; roomId = rid; roomName = '';
+    const nameFromRid = rid.replace(/^solo_/,'').replace(/_\d+$/,'');
+    uname = nameFromRid || localStorage.getItem('lu') || uname;
+    localStorage.setItem('lu', uname);
+    localStorage.setItem('lm','solo');
+    localStorage.removeItem('lrid');
+    dbRef = db.ref('rooms/'+rid+'/records');
+  }
+  document.getElementById('badge').textContent = isMulti ? (roomName||roomId) : '個人';
+  document.getElementById('room-info').innerHTML = isMulti
+    ? `房間：<strong>${roomName}</strong><br>代碼：${roomId}<br>名字：${uname}`
+    : `個人 · ${uname}`;
+  closeMenu();
+  listen();
+}
+
 // 匯率
 let rates={TWD:1};
 const CURR_NAMES={TWD:'TWD',JPY:'JPY',USD:'USD',EUR:'EUR',GBP:'GBP',KRW:'KRW',HKD:'HKD',THB:'THB',IDR:'IDR'};
@@ -423,6 +543,7 @@ function doSolo(name){
   let rid=localStorage.getItem(k);
   if(!rid){rid='solo_'+name+'_'+Date.now();localStorage.setItem(k,rid);}
   roomId=rid; roomName='';
+  addToHistory(name, rid, 'solo');
   dbRef=db.ref('rooms/'+roomId+'/records');
   listen(); enterApp();
 }
@@ -641,6 +762,12 @@ function openMenu(){
   document.getElementById('m-multi-sec').style.display=isMulti?'none':'block';
   document.getElementById('m-cname').value=uname;
   document.getElementById('m-jname').value=uname;
+  editMode=false;
+  const hl=document.getElementById('hlist');
+  if(hl) hl.classList.remove('edit-mode');
+  const hb=document.getElementById('hedit-btn');
+  if(hb) hb.textContent='長按可刪除';
+  renderHistory();
 }
 function closeMenu(){
   document.getElementById('menu').classList.remove('show');
@@ -664,6 +791,7 @@ function mCreate(){
   db.ref('rooms/'+roomId+'/meta').set({name:roomName,host:n,created:Date.now()});
   document.getElementById('badge').textContent=roomName;
   document.getElementById('room-info').innerHTML=`房間：<strong>${roomName}</strong><br>代碼：${roomId}<br>名字：${uname}`;
+  addToHistory(roomName, roomId, 'multi');
   closeMenu();listen();
   alert('房間建立成功！\n名稱：'+roomName+'\n代碼：'+roomId+'\n把代碼分享給朋友');
 }
@@ -678,6 +806,7 @@ function mJoin(){
   db.ref('rooms/'+code+'/meta/name').once('value').then(s=>{
     roomName=s.val()||code;
     localStorage.setItem('lrn',roomName);
+    addToHistory(roomName, roomId, 'multi');
     document.getElementById('badge').textContent=roomName;
     document.getElementById('room-info').innerHTML=`房間：<strong>${roomName}</strong><br>代碼：${roomId}<br>名字：${uname}`;
   });
