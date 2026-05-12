@@ -341,13 +341,17 @@ const CURR_NAMES={TWD:'TWD',JPY:'JPY',USD:'USD',EUR:'EUR',GBP:'GBP',KRW:'KRW',HK
 
 async function fetchRates(){
   try{
-    const res=await fetch('https://open.er-api.com/v6/latest/TWD');
+    // 用 TWD 為目標，取得 1 外幣 = X TWD
+    const res=await fetch('https://open.er-api.com/v6/latest/USD');
     const data=await res.json();
-    if(data&&data.rates){
-      // open.er-api 給的是 TWD 為基準的匯率（1 TWD = X 外幣）
-      // 我們需要 1 外幣 = X TWD，所以要取倒數
+    if(data&&data.rates&&data.rates.TWD){
+      const usdToTwd=data.rates.TWD; // 1 USD = X TWD
       Object.keys(CURR_NAMES).forEach(c=>{
-        if(c!=='TWD'&&data.rates[c]) rates[c]=1/data.rates[c];
+        if(c==='TWD') rates[c]=1;
+        else if(data.rates[c]){
+          // 1 外幣 = (1/data.rates[c]) USD = (1/data.rates[c])*usdToTwd TWD
+          rates[c]=usdToTwd/data.rates[c];
+        }
       });
       updateRateLabel();
     }
@@ -374,7 +378,8 @@ function onAmtInput(){
   if(!el) return;
   if(curr==='TWD'||!amt||isNaN(amt)){el.textContent='';return;}
   const rate=rates[curr]||1;
-  el.textContent=`≈ ${fmt(Math.round(amt/rate))}`;
+  // 1 外幣 = rate 台幣，所以 amt 外幣 = amt * rate 台幣
+  el.textContent=`≈ ${fmt(Math.round(amt*rate))} TWD`;
 }
 
 function saveSalary(){localStorage.setItem('sal',parseInt(document.getElementById('salary').value)||0)}
@@ -483,7 +488,8 @@ function addRec(){
   if(!date){alert('請選擇日期');return;}
   const curr=document.getElementById('inp-curr').value;
   const rate=rates[curr]||1;
-  const amt=curr==='TWD'?rawAmt:Math.round(rawAmt/rate);
+  // 外幣 * rate = 台幣
+  const amt=curr==='TWD'?rawAmt:Math.round(rawAmt*rate);
   const cat=document.getElementById('inp-cat').value;
   const note=document.getElementById('inp-note').value.trim();
   dbRef.push({type:curType,amount:amt,cat,date,note,user:uname,ts:Date.now(),origAmt:rawAmt,origCurr:curr});
