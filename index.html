@@ -99,6 +99,17 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
 .qcat.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .qok{width:100%;padding:13px;font-size:15px;font-weight:500;background:#FF8C42;color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit}
 .mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:299}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;align-items:center;justify-content:center}
+.modal-ov.show{display:flex}
+.modal{background:#fff;border-radius:20px;padding:28px 24px 20px;width:280px;text-align:center}
+.modal-icon{font-size:40px;margin-bottom:12px}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:6px}
+.modal-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.6}
+.modal-ok{width:100%;padding:12px;font-size:15px;font-weight:500;background:#1a1a1a;color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit}
+.curr-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;background:#f5f5f0;border-radius:10px;padding:4px}
+.curr-sel{flex:1;background:none;border:none;font-size:14px;font-weight:500;color:#FF8C42;outline:none;font-family:inherit;cursor:pointer;padding:6px 8px}
+.curr-rate{font-size:11px;color:#aaa;white-space:nowrap;padding-right:8px}
+.curr-converted{font-size:12px;color:#888;margin-bottom:12px;text-align:right;min-height:18px}
 .mov.show{display:block}
 .menu{position:fixed;top:0;right:-290px;width:290px;height:100vh;background:#fff;z-index:300;transition:right .3s;padding:52px 20px 20px;box-shadow:-4px 0 20px rgba(0,0,0,.1);overflow-y:auto}
 .menu.show{right:0}
@@ -192,14 +203,30 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
             <button class="tb" id="t-inc" onclick="setType('i')">收入</button>
           </div>
         </div>
+        <div class="fg">
+          <label>幣別與金額</label>
+          <div class="curr-row">
+            <select class="curr-sel" id="inp-curr" onchange="onCurrChange()">
+              <option value="TWD">🇹🇼 TWD</option>
+              <option value="JPY">🇯🇵 JPY</option>
+              <option value="USD">🇺🇸 USD</option>
+              <option value="EUR">🇪🇺 EUR</option>
+              <option value="GBP">🇬🇧 GBP</option>
+              <option value="KRW">🇰🇷 KRW</option>
+              <option value="HKD">🇭🇰 HKD</option>
+              <option value="THB">🇹🇭 THB</option>
+              <option value="IDR">🇮🇩 IDR</option>
+            </select>
+            <span class="curr-rate" id="curr-rate-label"></span>
+          </div>
+          <input type="number" id="inp-amt" placeholder="0" inputmode="numeric" oninput="onAmtInput()">
+          <div class="curr-converted" id="curr-converted"></div>
+        </div>
         <div class="fr">
-          <div class="fg"><label>金額（NT$）</label><input type="number" id="inp-amt" placeholder="0" inputmode="numeric"></div>
           <div class="fg"><label>分類</label><select id="inp-cat"></select></div>
-        </div>
-        <div class="fr">
           <div class="fg"><label>日期</label><input type="date" id="inp-date"></div>
-          <div class="fg"><label>備註</label><input type="text" id="inp-note" placeholder="選填"></div>
         </div>
+        <div class="fg"><label>備註</label><input type="text" id="inp-note" placeholder="選填"></div>
         <button class="abtn" onclick="addRec()">新增</button>
       </div>
     </div>
@@ -241,6 +268,16 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
       <div class="card"><div class="st">帳本資訊</div><div id="room-info" style="font-size:14px;color:#888;line-height:2"></div></div>
     </div>
 
+  </div>
+</div>
+
+<!-- 記帳成功 Modal -->
+<div class="modal-ov" id="success-modal">
+  <div class="modal">
+    <div class="modal-icon">✅</div>
+    <div class="modal-title">記帳成功</div>
+    <div class="modal-sub" id="success-detail"></div>
+    <button class="modal-ok" onclick="closeModal()">確認</button>
   </div>
 </div>
 
@@ -298,6 +335,48 @@ const sal=()=>parseInt(localStorage.getItem('sal'))||0;
 const arr=()=>Object.entries(recs).map(([id,r])=>({...r,id}));
 const genCode=()=>Math.random().toString(36).substring(2,6).toUpperCase();
 
+// 匯率
+let rates={TWD:1};
+const CURR_NAMES={TWD:'TWD',JPY:'JPY',USD:'USD',EUR:'EUR',GBP:'GBP',KRW:'KRW',HKD:'HKD',THB:'THB',IDR:'IDR'};
+
+async function fetchRates(){
+  try{
+    const res=await fetch('https://open.er-api.com/v6/latest/TWD');
+    const data=await res.json();
+    if(data&&data.rates){
+      // open.er-api 給的是 TWD 為基準的匯率（1 TWD = X 外幣）
+      // 我們需要 1 外幣 = X TWD，所以要取倒數
+      Object.keys(CURR_NAMES).forEach(c=>{
+        if(c!=='TWD'&&data.rates[c]) rates[c]=1/data.rates[c];
+      });
+      updateRateLabel();
+    }
+  }catch(e){console.log('匯率載入失敗',e);}
+}
+
+function updateRateLabel(){
+  const curr=document.getElementById('inp-curr')?document.getElementById('inp-curr').value:'TWD';
+  const el=document.getElementById('curr-rate-label');
+  if(!el) return;
+  if(curr==='TWD'){el.textContent='';}
+  else{const r=rates[curr];el.textContent=r?`1${curr}≈${r.toFixed(2)}元`:'';}
+}
+
+function onCurrChange(){
+  updateRateLabel();
+  onAmtInput();
+}
+
+function onAmtInput(){
+  const curr=document.getElementById('inp-curr').value;
+  const amt=parseFloat(document.getElementById('inp-amt').value);
+  const el=document.getElementById('curr-converted');
+  if(!el) return;
+  if(curr==='TWD'||!amt||isNaN(amt)){el.textContent='';return;}
+  const rate=rates[curr]||1;
+  el.textContent=`≈ ${fmt(Math.round(amt/rate))}`;
+}
+
 function saveSalary(){localStorage.setItem('sal',parseInt(document.getElementById('salary').value)||0)}
 
 // DB 監聽
@@ -326,6 +405,7 @@ function enterApp(){
   document.getElementById('inp-date').value=new Date().toISOString().slice(0,10);
   setCat();renderQC();
   history.replaceState({tab:'record'},'','');
+  fetchRates();
 }
 
 // 登入
@@ -397,14 +477,24 @@ function setCat(){
   document.getElementById('inp-cat').innerHTML=(curType==='e'?EC:IC).map(c=>`<option>${c}</option>`).join('');
 }
 function addRec(){
-  const amt=parseFloat(document.getElementById('inp-amt').value);
-  if(!amt||amt<=0){alert('請輸入金額');return;}
+  const rawAmt=parseFloat(document.getElementById('inp-amt').value);
+  if(!rawAmt||rawAmt<=0){alert('請輸入金額');return;}
   const date=document.getElementById('inp-date').value;
   if(!date){alert('請選擇日期');return;}
-  dbRef.push({type:curType,amount:amt,cat:document.getElementById('inp-cat').value,date,note:document.getElementById('inp-note').value.trim(),user:uname,ts:Date.now()});
+  const curr=document.getElementById('inp-curr').value;
+  const rate=rates[curr]||1;
+  const amt=curr==='TWD'?rawAmt:Math.round(rawAmt/rate);
+  const cat=document.getElementById('inp-cat').value;
+  const note=document.getElementById('inp-note').value.trim();
+  dbRef.push({type:curType,amount:amt,cat,date,note,user:uname,ts:Date.now(),origAmt:rawAmt,origCurr:curr});
+  const label=curr==='TWD'?fmt(amt):`${curr} ${rawAmt.toLocaleString()} → ${fmt(amt)}`;
+  document.getElementById('success-detail').innerHTML=`<strong>${cat}</strong><br>${label}<br>${date}`;
+  document.getElementById('success-modal').classList.add('show');
   document.getElementById('inp-amt').value='';
   document.getElementById('inp-note').value='';
+  document.getElementById('curr-converted').textContent='';
 }
+function closeModal(){document.getElementById('success-modal').classList.remove('show');}
 function delRec(id){db.ref('rooms/'+roomId+'/records/'+id).remove();}
 
 // 畫面
