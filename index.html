@@ -4,260 +4,253 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="記帳本">
 <title>記帳本</title>
 <link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" href="icon.png">
-<link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Noto Sans TC',sans-serif;background:#f5f5f0;color:#1a1a1a;max-width:480px;margin:0 auto;min-height:100vh}
-.hidden{display:none!important}
-/* 載入 */
-#loading-screen{position:fixed;inset:0;background:#f5f5f0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-.spinner{width:36px;height:36px;border:3px solid #e0e0d8;border-top-color:#FF8C42;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-#loading-msg{font-size:14px;color:#888}
-#loading-err{font-size:13px;color:#D85A30;text-align:center;padding:0 32px;line-height:1.6}
-#loading-retry{padding:10px 24px;background:#FF8C42;color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit}
-/* 首頁 */
-.room-screen{position:fixed;inset:0;background:#f5f5f0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;overflow-y:auto}
-.room-screen h2{font-size:22px;font-weight:500;margin-bottom:8px}
-.room-screen p{font-size:14px;color:#888;margin-bottom:24px;text-align:center}
-.room-card{background:#fff;border-radius:16px;padding:20px;width:100%;margin-bottom:12px}
-.room-card h3{font-size:13px;color:#aaa;margin-bottom:12px;font-weight:500}
-.room-input{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;border:none;border-radius:10px;margin-bottom:10px;outline:none;font-family:inherit;color:#1a1a1a}
-.room-btn{width:100%;padding:13px;font-size:15px;font-weight:500;border:none;border-radius:12px;cursor:pointer;font-family:inherit;margin-bottom:6px}
-.room-btn.primary{background:#1a1a1a;color:#fff}
-/* header */
-.header{background:#fff;padding:16px 20px 0;border-bottom:.5px solid #e0e0d8;position:sticky;top:0;z-index:10}
-.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.header h1{font-size:18px;font-weight:500}
-.room-badge{font-size:11px;background:#FF8C42;color:#fff;padding:3px 8px;border-radius:20px}
-.hamburger{background:none;border:none;cursor:pointer;padding:4px;display:flex;flex-direction:column;gap:4px}
-.hamburger span{width:18px;height:2px;background:#1a1a1a;display:block;border-radius:2px}
-.tab-bar{display:flex}
-.tab{flex:1;padding:10px 0;font-size:12px;background:none;border:none;color:#888;cursor:pointer;border-bottom:2px solid transparent}
-.tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
-.content{padding:16px;padding-bottom:80px}
-.section{display:none}
-.section.active{display:block}
-/* 側邊選單 */
-.menu-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:299}
-.menu-overlay.open{display:block}
-.side-menu{position:fixed;top:0;right:-290px;width:290px;height:100vh;background:#fff;z-index:300;transition:right .3s;padding:56px 20px 20px;box-shadow:-4px 0 20px rgba(0,0,0,.1);overflow-y:auto}
-.side-menu.open{right:0}
-.menu-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#888}
-.menu-sec{margin-bottom:20px}
-.menu-sec h3{font-size:11px;color:#aaa;font-weight:500;margin-bottom:10px;letter-spacing:.5px}
-.menu-input{width:100%;padding:9px 12px;font-size:14px;background:#f5f5f0;border:none;border-radius:10px;margin-bottom:8px;outline:none;font-family:inherit;color:#1a1a1a}
-.menu-btn{width:100%;padding:10px;font-size:14px;font-weight:500;border:none;border-radius:10px;cursor:pointer;font-family:inherit;margin-bottom:6px}
-.menu-btn.orange{background:#FF8C42;color:#fff}
-.menu-btn.outline{background:none;border:1px solid #e0e0d8;color:#888}
-.menu-btn.danger{background:none;border:1px solid #D85A30;color:#D85A30}
-.menu-divider{height:.5px;background:#f0f0e8;margin:14px 0}
-.menu-info{font-size:13px;color:#888;line-height:1.8}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:#ccc;display:inline-block;margin-right:4px}
-.sync-dot.online{background:#1D9E75}
-/* 記帳UI */
-.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.metric{background:#fff;border-radius:12px;padding:14px 12px}
-.metric label{font-size:11px;color:#888;display:block;margin-bottom:4px}
-.metric .val{font-size:17px;font-weight:500}
-.green{color:#1D9E75}.red{color:#D85A30}
+body{font-family:-apple-system,sans-serif;background:#f5f5f0;color:#1a1a1a;max-width:480px;margin:0 auto;min-height:100vh}
+#loading{position:fixed;inset:0;background:#f5f5f0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.spin{width:36px;height:36px;border:3px solid #e0e0d8;border-top-color:#FF8C42;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#load-msg{font-size:14px;color:#888}
+#load-err{font-size:13px;color:#D85A30;text-align:center;padding:0 32px;line-height:1.6;display:none}
+#load-retry{padding:10px 24px;background:#FF8C42;color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;display:none}
+.screen{position:fixed;inset:0;background:#f5f5f0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px;overflow-y:auto}
+.screen.show{display:flex}
+.screen h2{font-size:22px;font-weight:500;margin-bottom:8px}
+.screen p{font-size:14px;color:#888;margin-bottom:24px;text-align:center}
+.scard{background:#fff;border-radius:16px;padding:20px;width:100%;margin-bottom:12px}
+.scard h3{font-size:12px;color:#aaa;margin-bottom:12px;font-weight:500}
+.sinput{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;border:none;border-radius:10px;margin-bottom:8px;outline:none;font-family:inherit;color:#1a1a1a;display:block}
+.sbtn{width:100%;padding:12px;font-size:15px;font-weight:500;border:none;border-radius:12px;cursor:pointer;font-family:inherit;margin-bottom:6px}
+.sbtn.dark{background:#1a1a1a;color:#fff}
+.sbtn.orange{background:#FF8C42;color:#fff}
+.sbtn.outline{background:none;border:1px solid #e0e0d8;color:#888}
+#app{display:none}
+.hdr{background:#fff;padding:14px 16px 0;border-bottom:.5px solid #e0e0d8;position:sticky;top:0;z-index:10}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hdr h1{font-size:17px;font-weight:500}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;background:#FF8C42;color:#fff;padding:3px 8px;border-radius:20px}
+.sync{font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px}
+.sdot{width:6px;height:6px;border-radius:50%;background:#ccc;display:inline-block}
+.sdot.on{background:#1D9E75}
+.hbg{background:none;border:none;cursor:pointer;padding:4px;display:flex;flex-direction:column;gap:4px}
+.hbg span{width:18px;height:2px;background:#1a1a1a;display:block;border-radius:2px}
+.tabs{display:flex}
+.tab{flex:1;padding:10px 0;font-size:12px;background:none;border:none;color:#888;cursor:pointer;border-bottom:2px solid transparent;font-family:inherit}
+.tab.on{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
+.body{padding:16px;padding-bottom:80px}
+.sec{display:none}
+.sec.on{display:block}
+.mg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.mc{background:#fff;border-radius:12px;padding:12px}
+.mc label{font-size:11px;color:#888;display:block;margin-bottom:4px}
+.mc .v{font-size:16px;font-weight:500}
+.v.g{color:#1D9E75}.v.r{color:#D85A30}
 .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px}
-.form-group{margin-bottom:12px}
-.form-group label{font-size:12px;color:#888;display:block;margin-bottom:5px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg{margin-bottom:12px}
+.fg label{font-size:12px;color:#888;display:block;margin-bottom:5px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;color:#1a1a1a;border:none;border-radius:10px;outline:none;font-family:inherit}
-.type-toggle{display:flex;border-radius:10px;overflow:hidden;background:#f5f5f0;padding:3px;gap:3px}
-.type-btn{flex:1;padding:9px;font-size:14px;cursor:pointer;border:none;border-radius:8px;background:none;color:#888;font-family:inherit}
-.type-btn.ae{background:#fff;color:#D85A30;font-weight:500}
-.type-btn.ai{background:#fff;color:#1D9E75;font-weight:500}
-.add-btn{width:100%;padding:13px;font-size:15px;font-weight:500;background:#1a1a1a;color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit}
-.record-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:.5px solid #f0f0e8}
-.record-item:last-child{border-bottom:none}
-.rdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.rdot.income{background:#1D9E75}.rdot.expense{background:#D85A30}
+.tt{display:flex;border-radius:10px;overflow:hidden;background:#f5f5f0;padding:3px;gap:3px}
+.tb{flex:1;padding:9px;font-size:14px;cursor:pointer;border:none;border-radius:8px;background:none;color:#888;font-family:inherit}
+.tb.exp{background:#fff;color:#D85A30;font-weight:500}
+.tb.inc{background:#fff;color:#1D9E75;font-weight:500}
+.abtn{width:100%;padding:13px;font-size:15px;font-weight:500;background:#1a1a1a;color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit}
+.ri{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:.5px solid #f0f0e8}
+.ri:last-child{border-bottom:none}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.e{background:#D85A30}.dot.i{background:#1D9E75}
 .rinfo{flex:1;min-width:0}
-.rinfo .name{font-size:14px}
-.rinfo .meta{font-size:11px;color:#aaa;margin-top:2px}
-.ramt{font-size:14px;font-weight:500;white-space:nowrap}
-.ramt.income{color:#1D9E75}.ramt.expense{color:#D85A30}
-.del-btn{background:none;border:none;cursor:pointer;color:#ccc;font-size:16px;padding:4px 6px}
-.filter-row{display:flex;gap:8px;margin-bottom:12px}
-.filter-row select{background:#fff}
-.month-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.month-nav button{background:#fff;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:15px}
-.month-nav span{font-size:15px;font-weight:500;flex:1;text-align:center}
-.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.bar-label{font-size:12px;color:#888;width:52px;flex-shrink:0;text-align:right}
-.bar-wrap{flex:1;height:7px;background:#f0f0e8;border-radius:4px;overflow:hidden}
-.bar-fill{height:100%;border-radius:4px;transition:width .4s}
-.bar-fill.expense{background:#D85A30}.bar-fill.income{background:#1D9E75}
-.bar-val{font-size:11px;color:#888;width:68px;text-align:right;flex-shrink:0}
-.sec-title{font-size:12px;color:#aaa;font-weight:500;margin-bottom:10px}
+.rn{font-size:14px}.rm{font-size:11px;color:#aaa;margin-top:2px}
+.ra{font-size:14px;font-weight:500;white-space:nowrap}
+.ra.e{color:#D85A30}.ra.i{color:#1D9E75}
+.xb{background:none;border:none;cursor:pointer;color:#ccc;font-size:15px;padding:4px}
+.fr2{display:flex;gap:8px;margin-bottom:12px}
+.fr2 select{background:#fff}
+.mn{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.mn button{background:#fff;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px;font-family:inherit}
+.mn span{font-size:15px;font-weight:500;flex:1;text-align:center}
+.br{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.bl{font-size:12px;color:#888;width:52px;flex-shrink:0;text-align:right}
+.bw{flex:1;height:7px;background:#f0f0e8;border-radius:4px;overflow:hidden}
+.bf{height:100%;border-radius:4px;transition:width .4s}
+.bf.e{background:#D85A30}.bf.i{background:#1D9E75}
+.bv{font-size:11px;color:#888;width:68px;text-align:right;flex-shrink:0}
+.st{font-size:12px;color:#aaa;font-weight:500;margin-bottom:10px}
 .empty{text-align:center;padding:2rem;color:#bbb;font-size:14px}
-.tlegend{display:flex;gap:16px;margin-bottom:10px}
-.tlegend span{display:flex;align-items:center;gap:5px;font-size:12px;color:#888}
-.tlegend i{width:10px;height:10px;border-radius:2px;display:inline-block}
-.split-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:.5px solid #f0f0e8;font-size:14px}
-.split-row:last-child{border-bottom:none}
-.split-result{padding:14px;background:#fff;border-radius:14px;font-size:14px;text-align:center;font-weight:500;line-height:2;margin-bottom:12px}
-/* 快速記帳 */
-.quick-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#FF8C42;color:#fff;font-size:28px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:40;box-shadow:0 4px 16px rgba(255,140,66,.4)}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end}
-.overlay.open{display:flex}
-.quick-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%}
-.quick-sheet h3{font-size:15px;font-weight:500;margin-bottom:14px}
-.qamt{font-size:32px;font-weight:500;width:100%;border:none;background:none;color:#1a1a1a;margin-bottom:12px;outline:none;font-family:inherit}
-.qcats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tl{display:flex;gap:16px;margin-bottom:10px}
+.tl span{display:flex;align-items:center;gap:5px;font-size:12px;color:#888}
+.tl i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:.5px solid #f0f0e8;font-size:14px}
+.srow:last-child{border-bottom:none}
+.sres{padding:14px;background:#fff;border-radius:14px;font-size:14px;text-align:center;font-weight:500;line-height:2;margin-bottom:12px}
+.fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:#FF8C42;color:#fff;font-size:28px;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:40;box-shadow:0 4px 16px rgba(255,140,66,.4)}
+.fab.show{display:flex}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:flex-end}
+.ov.show{display:flex}
+.qs{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%}
+.qs h3{font-size:15px;font-weight:500;margin-bottom:14px}
+.qa{font-size:32px;font-weight:500;width:100%;border:none;background:none;color:#1a1a1a;margin-bottom:12px;outline:none;font-family:inherit}
+.qc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .qcat{padding:7px 14px;border-radius:20px;border:1px solid #e0e0d8;background:#f5f5f0;font-size:13px;cursor:pointer;color:#888;font-family:inherit}
-.qcat.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-.qconfirm{width:100%;padding:14px;font-size:15px;font-weight:500;background:#FF8C42;color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit}
+.qcat.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.qok{width:100%;padding:13px;font-size:15px;font-weight:500;background:#FF8C42;color:#fff;border:none;border-radius:12px;cursor:pointer;font-family:inherit}
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:299}
+.mov.show{display:block}
+.menu{position:fixed;top:0;right:-290px;width:290px;height:100vh;background:#fff;z-index:300;transition:right .3s;padding:52px 20px 20px;box-shadow:-4px 0 20px rgba(0,0,0,.1);overflow-y:auto}
+.menu.show{right:0}
+.mclose{position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#888}
+.msec{margin-bottom:20px}
+.msec h3{font-size:11px;color:#aaa;font-weight:500;margin-bottom:10px;letter-spacing:.5px}
+.minput{width:100%;padding:9px 12px;font-size:14px;background:#f5f5f0;border:none;border-radius:10px;margin-bottom:8px;outline:none;font-family:inherit;color:#1a1a1a;display:block}
+.mbtn{width:100%;padding:10px;font-size:14px;font-weight:500;border:none;border-radius:10px;cursor:pointer;font-family:inherit;margin-bottom:6px}
+.mbtn.orange{background:#FF8C42;color:#fff}
+.mbtn.out{background:none;border:1px solid #e0e0d8;color:#888}
+.mbtn.danger{background:none;border:1px solid #D85A30;color:#D85A30}
+.mdiv{height:.5px;background:#f0f0e8;margin:14px 0}
+.minfo{font-size:13px;color:#888;line-height:1.8}
 </style>
 </head>
 <body>
 
-<div id="loading-screen">
-  <div class="spinner"></div>
-  <div id="loading-msg">載入中...</div>
-  <div id="loading-step" style="font-size:11px;color:#bbb;margin-top:4px"></div>
-  <div id="loading-err" class="hidden"></div>
-  <button id="loading-retry" class="hidden" onclick="location.reload()">重新載入</button>
+<div id="loading">
+  <div class="spin"></div>
+  <div id="load-msg">載入中...</div>
+  <div id="load-err"></div>
+  <button id="load-retry" onclick="location.reload()">重新載入</button>
 </div>
 
-<div id="room-screen" class="room-screen hidden">
+<div id="screen-login" class="screen">
   <h2>📒 記帳本</h2>
   <p>輸入你的名字開始記帳</p>
-  <div class="room-card">
-    <input class="room-input" id="solo-name" placeholder="你的名字（例：Yota）">
-    <button class="room-btn primary" onclick="startSolo()">開始記帳</button>
+  <div class="scard">
+    <input class="sinput" id="login-name" placeholder="你的名字（例：Yota）">
+    <button class="sbtn dark" onclick="doLogin()">開始記帳</button>
   </div>
 </div>
 
-<div class="menu-overlay" id="menu-overlay" onclick="closeMenu()"></div>
-<div class="side-menu" id="side-menu">
-  <button class="menu-close" onclick="closeMenu()">✕</button>
-  <div class="menu-sec">
+<div class="mov" id="mov" onclick="closeMenu()"></div>
+<div class="menu" id="menu">
+  <button class="mclose" onclick="closeMenu()">✕</button>
+  <div class="msec">
     <h3>目前狀態</h3>
-    <div class="menu-info" id="menu-status"></div>
+    <div class="minfo" id="menu-info"></div>
   </div>
-  <div class="menu-divider"></div>
-  <div class="menu-sec">
+  <div class="mdiv"></div>
+  <div class="msec">
     <h3>單人帳本</h3>
-    <input class="menu-input" id="menu-solo-name" placeholder="帳本名稱">
-    <button class="menu-btn outline" onclick="menuSwitchSolo()">切換／新增帳本</button>
+    <input class="minput" id="m-solo" placeholder="帳本名稱">
+    <button class="mbtn out" onclick="mSolo()">切換／新增帳本</button>
   </div>
-  <div class="menu-divider"></div>
-  <div class="menu-sec" id="menu-multi-sec">
+  <div class="mdiv"></div>
+  <div class="msec" id="m-multi-sec">
     <h3>多人共帳</h3>
-    <input class="menu-input" id="menu-create-name" placeholder="你的名字">
-    <input class="menu-input" id="menu-room-name" placeholder="房間名稱（例：日本旅遊）">
-    <button class="menu-btn orange" onclick="menuCreateRoom()">＋ 建立新房間</button>
+    <input class="minput" id="m-cname" placeholder="你的名字">
+    <input class="minput" id="m-rname" placeholder="房間名稱（例：日本旅遊）">
+    <button class="mbtn orange" onclick="mCreate()">＋ 建立新房間</button>
     <div style="text-align:center;font-size:12px;color:#ccc;margin:8px 0">或</div>
-    <input class="menu-input" id="menu-join-name" placeholder="你的名字">
-    <input class="menu-input" id="menu-join-code" placeholder="4碼代碼" maxlength="4" style="text-transform:uppercase;letter-spacing:6px;text-align:center">
-    <button class="menu-btn outline" onclick="menuJoinRoom()">加入房間</button>
+    <input class="minput" id="m-jname" placeholder="你的名字">
+    <input class="minput" id="m-jcode" placeholder="4碼代碼" maxlength="4" style="text-transform:uppercase;letter-spacing:6px;text-align:center">
+    <button class="mbtn out" onclick="mJoin()">加入房間</button>
   </div>
-  <div id="menu-leave-sec" class="hidden">
-    <div class="menu-divider"></div>
-    <button class="menu-btn danger" onclick="leaveRoom()">離開多人房間</button>
+  <div id="m-leave-sec" style="display:none">
+    <div class="mdiv"></div>
+    <button class="mbtn danger" onclick="mLeave()">離開多人房間</button>
   </div>
 </div>
 
-<div id="main-app" class="hidden">
-  <div class="header">
-    <div class="header-top">
+<div id="app">
+  <div class="hdr">
+    <div class="hdr-top">
       <h1>記帳本</h1>
-      <div style="display:flex;align-items:center;gap:10px">
-        <span><span class="sync-dot" id="sync-dot"></span><span id="sync-label" style="font-size:11px;color:#aaa">連線中</span></span>
-        <span class="room-badge" id="room-badge">個人</span>
-        <button class="hamburger" onclick="openMenu()" aria-label="選單">
-          <span></span><span></span><span></span>
-        </button>
+      <div class="hdr-right">
+        <div class="sync"><span class="sdot" id="sdot"></span><span id="slbl">連線中</span></div>
+        <span class="badge" id="badge">個人</span>
+        <button class="hbg" onclick="openMenu()"><span></span><span></span><span></span></button>
       </div>
     </div>
-    <div class="tab-bar">
-      <button class="tab active" onclick="switchTab('record')">記帳</button>
-      <button class="tab" onclick="switchTab('list')">明細</button>
-      <button class="tab" onclick="switchTab('analysis')">月分析</button>
-      <button class="tab" onclick="switchTab('split')">分帳</button>
-      <button class="tab" onclick="switchTab('settings')">設定</button>
+    <div class="tabs">
+      <button class="tab on" onclick="goTab('record')">記帳</button>
+      <button class="tab" onclick="goTab('list')">明細</button>
+      <button class="tab" onclick="goTab('analysis')">月分析</button>
+      <button class="tab" onclick="goTab('split')">分帳</button>
+      <button class="tab" onclick="goTab('settings')">設定</button>
     </div>
   </div>
-  <div class="content">
+  <div class="body">
 
-    <div id="tab-record" class="section active">
-      <div class="metric-grid" id="summary-metrics"></div>
+    <div id="sec-record" class="sec on">
+      <div class="mg" id="summary"></div>
       <div class="card">
-        <div class="form-group">
+        <div class="fg">
           <label>類型</label>
-          <div class="type-toggle">
-            <button class="type-btn ae" id="btn-expense" onclick="setType('expense')">支出</button>
-            <button class="type-btn" id="btn-income" onclick="setType('income')">收入</button>
+          <div class="tt">
+            <button class="tb exp" id="t-exp" onclick="setType('e')">支出</button>
+            <button class="tb" id="t-inc" onclick="setType('i')">收入</button>
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group"><label>金額（NT$）</label><input type="number" id="inp-amount" placeholder="0" inputmode="numeric"></div>
-          <div class="form-group"><label>分類</label><select id="inp-cat"></select></div>
+        <div class="fr">
+          <div class="fg"><label>金額（NT$）</label><input type="number" id="inp-amt" placeholder="0" inputmode="numeric"></div>
+          <div class="fg"><label>分類</label><select id="inp-cat"></select></div>
         </div>
-        <div class="form-row">
-          <div class="form-group"><label>日期</label><input type="date" id="inp-date"></div>
-          <div class="form-group"><label>備註</label><input type="text" id="inp-note" placeholder="選填"></div>
+        <div class="fr">
+          <div class="fg"><label>日期</label><input type="date" id="inp-date"></div>
+          <div class="fg"><label>備註</label><input type="text" id="inp-note" placeholder="選填"></div>
         </div>
-        <button class="add-btn" onclick="addRecord()">新增</button>
+        <button class="abtn" onclick="addRec()">新增</button>
       </div>
     </div>
 
-    <div id="tab-list" class="section">
-      <div class="filter-row">
-        <select id="filter-month" onchange="renderList()"></select>
-        <select id="filter-type" onchange="renderList()"><option value="all">全部</option><option value="expense">支出</option><option value="income">收入</option></select>
+    <div id="sec-list" class="sec">
+      <div class="fr2">
+        <select id="f-month" onchange="renderList()"></select>
+        <select id="f-type" onchange="renderList()"><option value="all">全部</option><option value="e">支出</option><option value="i">收入</option></select>
       </div>
-      <div class="card"><div id="record-list"></div></div>
+      <div class="card"><div id="rec-list"></div></div>
     </div>
 
-    <div id="tab-analysis" class="section">
-      <div class="month-nav">
-        <button onclick="shiftMonth(-1)">←</button>
-        <span id="analysis-month-label"></span>
-        <button onclick="shiftMonth(1)">→</button>
+    <div id="sec-analysis" class="sec">
+      <div class="mn">
+        <button onclick="shiftM(-1)">←</button>
+        <span id="a-month"></span>
+        <button onclick="shiftM(1)">→</button>
       </div>
-      <div class="metric-grid" id="analysis-metrics"></div>
-      <div class="card"><div class="sec-title">支出分類</div><div id="expense-bars"></div></div>
-      <div class="card"><div class="sec-title">收入來源</div><div id="income-bars"></div></div>
+      <div class="mg" id="a-summary"></div>
+      <div class="card"><div class="st">支出分類</div><div id="exp-bars"></div></div>
+      <div class="card"><div class="st">收入來源</div><div id="inc-bars"></div></div>
       <div class="card">
-        <div class="sec-title">近 6 個月趨勢</div>
-        <div class="tlegend"><span><i style="background:#1D9E75"></i>收入</span><span><i style="background:#D85A30"></i>支出</span></div>
-        <div style="position:relative;width:100%;height:180px"><canvas id="trend-chart"></canvas></div>
+        <div class="st">近 6 個月趨勢</div>
+        <div class="tl"><span><i style="background:#1D9E75"></i>收入</span><span><i style="background:#D85A30"></i>支出</span></div>
+        <div style="position:relative;width:100%;height:180px"><canvas id="chart"></canvas></div>
       </div>
     </div>
 
-    <div id="tab-split" class="section"><div id="split-content"></div></div>
+    <div id="sec-split" class="sec"><div id="split-body"></div></div>
 
-    <div id="tab-settings" class="section">
+    <div id="sec-settings" class="sec">
       <div class="card">
-        <div class="sec-title">固定月薪</div>
+        <div class="st">固定月薪</div>
         <div style="display:flex;align-items:center;gap:10px">
-          <label style="font-size:13px;color:#888;white-space:nowrap">每月薪資 NT$</label>
-          <input type="number" id="salary-input" placeholder="0" inputmode="numeric" style="max-width:160px" oninput="saveSalary()">
+          <label style="font-size:13px;color:#888;white-space:nowrap">每月 NT$</label>
+          <input type="number" id="salary" placeholder="0" inputmode="numeric" style="max-width:160px" oninput="saveSalary()">
         </div>
       </div>
-      <div class="card"><div class="sec-title">帳本資訊</div><div id="room-info-card" style="font-size:14px;color:#888;line-height:2"></div></div>
+      <div class="card"><div class="st">帳本資訊</div><div id="room-info" style="font-size:14px;color:#888;line-height:2"></div></div>
     </div>
 
   </div>
 </div>
 
-<button class="quick-fab hidden" id="quick-fab" onclick="openQuick()" aria-label="快速記帳">+</button>
-<div class="overlay" id="quick-overlay" onclick="closeQuick(event)">
-  <div class="quick-sheet">
+<button class="fab" id="fab" onclick="openQ()">+</button>
+<div class="ov" id="qov" onclick="closeQ(event)">
+  <div class="qs">
     <h3>快速記帳（支出）</h3>
-    <input class="qamt" type="number" id="quick-amount" placeholder="輸入金額" inputmode="numeric">
-    <div class="qcats" id="quick-cats"></div>
-    <button class="qconfirm" onclick="confirmQuick()">確認新增</button>
+    <input class="qa" type="number" id="q-amt" placeholder="輸入金額" inputmode="numeric">
+    <div class="qc" id="q-cats"></div>
+    <button class="qok" onclick="addQ()">確認新增</button>
   </div>
 </div>
 
@@ -265,442 +258,372 @@ input,select{width:100%;padding:10px 12px;font-size:15px;background:#f5f5f0;colo
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-// 全域錯誤捕捉
-window.onerror = function(msg, src, line, col, err) {
-  var el = document.getElementById('loading-err');
-  var btn = document.getElementById('loading-retry');
-  var sp = document.querySelector('.spinner');
-  var mg = document.getElementById('loading-msg');
-  if(sp) sp.style.display='none';
-  if(mg) mg.style.display='none';
-  if(el){ el.classList.remove('hidden'); el.textContent='JS錯誤：'+msg+' (行'+line+')'; }
-  if(btn) btn.classList.remove('hidden');
-  return true;
-};
-window.onunhandledrejection = function(e) {
-  var el = document.getElementById('loading-err');
-  var btn = document.getElementById('loading-retry');
-  var sp = document.querySelector('.spinner');
-  var mg = document.getElementById('loading-msg');
-  if(sp) sp.style.display='none';
-  if(mg) mg.style.display='none';
-  if(el){ el.classList.remove('hidden'); el.textContent='Promise錯誤：'+(e.reason&&e.reason.message||e.reason); }
-  if(btn) btn.classList.remove('hidden');
-};
-
-const ECATS = ['餐飲','購物','交通','娛樂','醫療','住房','水電','通訊','保險','其他'];
-const ICATS = ['薪資','獎金','兼職','投資','其他收入'];
-const TABS = ['record','list','analysis','split','settings'];
-
-let curType = 'expense', aMonth = '', tChart = null, qCat = '購物';
-let roomId = '', roomName = '', userName = '', isMulti = false;
-let records = {}, dbRef = null;
-
-function updateRoomUI() {
-  const badge = isMulti ? (roomName||roomId) : '個人';
-  const el = document.getElementById('room-badge');
-  if (el) el.textContent = badge;
-  const info = document.getElementById('room-info-card');
-  if (info) info.innerHTML = isMulti
-    ? `房間名稱：<strong>${roomName}</strong><br>房間代碼：<strong>${roomId}</strong><br>名字：${userName}`
-    : `個人使用 · ${userName}`;
+// 錯誤處理
+function showErr(msg) {
+  document.querySelector('.spin').style.display='none';
+  document.getElementById('load-msg').style.display='none';
+  document.getElementById('load-err').style.display='block';
+  document.getElementById('load-err').textContent=msg;
+  document.getElementById('load-retry').style.display='block';
 }
+window.onerror=function(m,s,l){showErr('錯誤('+l+'):'+m);return true};
+window.onunhandledrejection=function(e){showErr('錯誤:'+(e.reason&&e.reason.message||e.reason))};
 
-// Firebase 初始化
-document.getElementById('loading-step').textContent = '步驟1：Firebase SDK 載入中';
-try {
+// Firebase
 firebase.initializeApp({
-  apiKey: "AIzaSyAExM8OPwQ8iM-sNWk5q1B4g64kflxivHU",
-  authDomain: "budget-app-5bed4.firebaseapp.com",
-  databaseURL: "https://budget-app-5bed4-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "budget-app-5bed4",
-  storageBucket: "budget-app-5bed4.firebasestorage.app",
-  messagingSenderId: "526050928979",
-  appId: "1:526050928979:web:347401d2d82603808cd9a6"
+  apiKey:"AIzaSyAExM8OPwQ8iM-sNWk5q1B4g64kflxivHU",
+  authDomain:"budget-app-5bed4.firebaseapp.com",
+  databaseURL:"https://budget-app-5bed4-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"budget-app-5bed4",
+  storageBucket:"budget-app-5bed4.firebasestorage.app",
+  messagingSenderId:"526050928979",
+  appId:"1:526050928979:web:347401d2d82603808cd9a6"
 });
-} catch(e) {
-  document.getElementById('loading-step').textContent = '❌ Firebase 初始化失敗：' + e.message;
-}
-document.getElementById('loading-step').textContent = '步驟2：資料庫連線中';
-const db = firebase.database();
-document.getElementById('loading-step').textContent = '步驟3：等待載入事件';
+const db=firebase.database();
+
+// 常數
+const EC=['餐飲','購物','交通','娛樂','醫療','住房','水電','通訊','保險','其他'];
+const IC=['薪資','獎金','兼職','投資','其他收入'];
+const TABS=['record','list','analysis','split','settings'];
+
+// 狀態
+let uname='',roomId='',roomName='',isMulti=false;
+let recs={},dbRef=null,curType='e',aMonth='',qCat='購物',chart=null;
 
 // 工具
-const fmt = n => 'NT$' + Math.round(n).toLocaleString();
-const mKey = d => d.slice(0,7);
-const now = () => new Date().toISOString().slice(0,7);
-const salary = () => parseInt(localStorage.getItem('budget_salary')) || 0;
-const getArr = () => Object.entries(records).map(([id,r]) => ({...r, id}));
-function genCode() { return Math.random().toString(36).substring(2,6).toUpperCase(); }
+const fmt=n=>'NT$'+Math.round(n).toLocaleString();
+const mk=d=>d.slice(0,7);
+const nowM=()=>new Date().toISOString().slice(0,7);
+const sal=()=>parseInt(localStorage.getItem('sal'))||0;
+const arr=()=>Object.entries(recs).map(([id,r])=>({...r,id}));
+const genCode=()=>Math.random().toString(36).substring(2,6).toUpperCase();
 
-function showErr(msg) {
-  document.querySelector('.spinner').style.display = 'none';
-  document.getElementById('loading-msg').style.display = 'none';
-  document.getElementById('loading-err').textContent = msg;
-  document.getElementById('loading-err').classList.remove('hidden');
-  document.getElementById('loading-retry').classList.remove('hidden');
+function saveSalary(){localStorage.setItem('sal',parseInt(document.getElementById('salary').value)||0)}
+
+// DB 監聽
+function listen(){
+  if(dbRef) dbRef.off('value');
+  dbRef.on('value',snap=>{
+    recs=snap.val()||{};
+    document.getElementById('sdot').className='sdot on';
+    document.getElementById('slbl').textContent='已連線';
+    redraw();
+  },err=>showErr('DB錯誤:'+err.message));
 }
 
-function hideLoading() {
-  document.getElementById('loading-screen').classList.add('hidden');
+// 進入 APP
+function enterApp(){
+  document.getElementById('loading').style.display='none';
+  document.getElementById('screen-login').classList.remove('show');
+  document.getElementById('app').style.display='block';
+  document.getElementById('fab').classList.add('show');
+  document.getElementById('badge').textContent=isMulti?(roomName||roomId):'個人';
+  document.getElementById('room-info').innerHTML=isMulti
+    ?`房間：<strong>${roomName}</strong><br>代碼：${roomId}<br>名字：${uname}`
+    :`個人 · ${uname}`;
+  const s=sal(); if(s) document.getElementById('salary').value=s;
+  aMonth=nowM();
+  document.getElementById('inp-date').value=new Date().toISOString().slice(0,10);
+  setCat();renderQC();
+  history.replaceState({tab:'record'},'','');
 }
 
-// 登入流程
-function startSolo() {
-  const name = document.getElementById('solo-name').value.trim() || '我';
-  doSoloLogin(name);
+// 登入
+function doSolo(name){
+  uname=name; isMulti=false;
+  localStorage.setItem('lu',name);
+  localStorage.setItem('lm','solo');
+  const k='sr_'+name;
+  let rid=localStorage.getItem(k);
+  if(!rid){rid='solo_'+name+'_'+Date.now();localStorage.setItem(k,rid);}
+  roomId=rid; roomName='';
+  dbRef=db.ref('rooms/'+roomId+'/records');
+  listen(); enterApp();
 }
 
-function doSoloLogin(name) {
-  userName = name; isMulti = false;
-  localStorage.setItem('last_user_name', name);
-  localStorage.setItem('last_mode', 'solo');
-  const key = 'solo_room_' + name;
-  let rid = localStorage.getItem(key);
-  if (!rid) { rid = 'solo_' + name + '_' + Date.now(); localStorage.setItem(key, rid); }
-  roomId = rid;
-  dbRef = db.ref('rooms/' + roomId + '/records');
-  startListening();
-  enterApp();
-}
-
-function stopListening() {
-  if (dbRef) dbRef.off('value');
-}
-function startListening() {
-  stopListening();
-  dbRef.on('value', snap => {
-    records = snap.val() || {};
-    document.getElementById('sync-dot').className = 'sync-dot online';
-    document.getElementById('sync-label').textContent = '已連線';
-    updateAll();
-  }, err => showErr('資料庫錯誤：' + err.message));
-}
-
-function enterApp() {
-  hideLoading();
-  document.getElementById('room-screen').classList.add('hidden');
-  document.getElementById('main-app').classList.remove('hidden');
-  document.getElementById('quick-fab').classList.remove('hidden');
-  updateRoomUI();
-  const s = salary(); if (s) document.getElementById('salary-input').value = s;
-  aMonth = now();
-  document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
-  updateCatSelect(); renderQCats();
-  history.replaceState({tab:'record'}, '', '');
+function doLogin(){
+  const n=document.getElementById('login-name').value.trim();
+  if(!n){alert('請輸入名字');return;}
+  doSolo(n);
 }
 
 // 自動登入
-window.addEventListener('load', () => {
-  document.getElementById('loading-step').textContent = '步驟4：自動登入中';
-  const lastName = localStorage.getItem('last_user_name');
-  const lastMode = localStorage.getItem('last_mode');
-  const lastRoomId = localStorage.getItem('last_room_id');
-  const lastRoomName = localStorage.getItem('last_room_name') || lastRoomId;
+window.addEventListener('load',()=>{
+  const lu=localStorage.getItem('lu');
+  const lm=localStorage.getItem('lm');
+  const lrid=localStorage.getItem('lrid');
+  const lrn=localStorage.getItem('lrn');
 
-  // 保險：8秒沒進去就強制顯示首頁
-  const safeTimer = setTimeout(() => {
-    if (document.getElementById('loading-screen') &&
-        !document.getElementById('loading-screen').classList.contains('hidden')) {
-      hideLoading();
-      // 清除多人狀態，避免下次又卡
-      localStorage.setItem('last_mode', 'solo');
-      localStorage.removeItem('last_room_id');
-      localStorage.removeItem('last_room_name');
-      if (lastName) {
-        doSoloLogin(lastName);
-      } else {
-        document.getElementById('room-screen').classList.remove('hidden');
+  if(lu && lm==='multi' && lrid){
+    uname=lu; isMulti=true; roomId=lrid; roomName=lrn||lrid;
+    dbRef=db.ref('rooms/'+roomId+'/records');
+    // 確認房間存在
+    db.ref('rooms/'+roomId+'/meta').once('value').then(()=>{
+      listen(); enterApp();
+    }).catch(()=>{
+      localStorage.setItem('lm','solo');
+      localStorage.removeItem('lrid');
+      doSolo(lu);
+    });
+  } else if(lu){
+    doSolo(lu);
+  } else {
+    document.getElementById('loading').style.display='none';
+    document.getElementById('screen-login').classList.add('show');
+  }
+
+  // 8秒保險
+  setTimeout(()=>{
+    if(document.getElementById('loading').style.display!=='none'){
+      localStorage.setItem('lm','solo');
+      localStorage.removeItem('lrid');
+      if(lu) doSolo(lu);
+      else{
+        document.getElementById('loading').style.display='none';
+        document.getElementById('screen-login').classList.add('show');
       }
     }
-  }, 8000);
-
-  if (lastName && lastMode === 'multi' && lastRoomId) {
-    // 自動回到多人房間，但先檢查房間是否存在
-    userName = lastName; isMulti = true; roomId = lastRoomId; roomName = lastRoomName;
-    dbRef = db.ref('rooms/'+roomId+'/records');
-    // 用 once 先確認房間存在再 startListening
-    db.ref('rooms/'+roomId).once('value').then(snap => {
-      clearTimeout(safeTimer);
-      updateRoomUI();
-      startListening();
-      enterApp();
-    }).catch(() => {
-      clearTimeout(safeTimer);
-      // 房間不存在，改回單人
-      localStorage.setItem('last_mode', 'solo');
-      localStorage.removeItem('last_room_id');
-      doSoloLogin(lastName);
-    });
-  } else if (lastName) {
-    clearTimeout(safeTimer);
-    doSoloLogin(lastName);
-  } else {
-    clearTimeout(safeTimer);
-    hideLoading();
-    document.getElementById('room-screen').classList.remove('hidden');
-  }
+  },8000);
 });
 
 // 記帳
-function setType(t) {
-  curType = t;
-  document.getElementById('btn-expense').className = 'type-btn' + (t==='expense'?' ae':'');
-  document.getElementById('btn-income').className = 'type-btn' + (t==='income'?' ai':'');
-  updateCatSelect();
+function setType(t){
+  curType=t;
+  document.getElementById('t-exp').className='tb'+(t==='e'?' exp':'');
+  document.getElementById('t-inc').className='tb'+(t==='i'?' inc':'');
+  setCat();
 }
-function updateCatSelect() {
-  document.getElementById('inp-cat').innerHTML = (curType==='expense'?ECATS:ICATS).map(c=>`<option>${c}</option>`).join('');
+function setCat(){
+  document.getElementById('inp-cat').innerHTML=(curType==='e'?EC:IC).map(c=>`<option>${c}</option>`).join('');
 }
-function addRecord() {
-  const amount = parseFloat(document.getElementById('inp-amount').value);
-  if (!amount || amount<=0) { alert('請輸入金額'); return; }
-  const date = document.getElementById('inp-date').value;
-  if (!date) { alert('請選擇日期'); return; }
-  dbRef.push({ type:curType, amount, cat:document.getElementById('inp-cat').value, date, note:document.getElementById('inp-note').value.trim(), user:userName, ts:Date.now() });
-  document.getElementById('inp-amount').value = '';
-  document.getElementById('inp-note').value = '';
+function addRec(){
+  const amt=parseFloat(document.getElementById('inp-amt').value);
+  if(!amt||amt<=0){alert('請輸入金額');return;}
+  const date=document.getElementById('inp-date').value;
+  if(!date){alert('請選擇日期');return;}
+  dbRef.push({type:curType,amount:amt,cat:document.getElementById('inp-cat').value,date,note:document.getElementById('inp-note').value.trim(),user:uname,ts:Date.now()});
+  document.getElementById('inp-amt').value='';
+  document.getElementById('inp-note').value='';
 }
-function deleteRecord(id) { db.ref('rooms/'+roomId+'/records/'+id).remove(); }
+function delRec(id){db.ref('rooms/'+roomId+'/records/'+id).remove();}
 
-// 畫面更新
-function renderSummary() {
-  const m = now(), arr = getArr(), sal = salary();
-  const mr = arr.filter(r=>mKey(r.date)===m);
-  let inc = mr.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  let exp = mr.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
-  if (sal) inc = Math.max(inc, sal);
-  const bal = inc - exp;
-  document.getElementById('summary-metrics').innerHTML = `
-    <div class="metric"><label>本月收入</label><div class="val green">${fmt(inc)}</div></div>
-    <div class="metric"><label>本月支出</label><div class="val red">${fmt(exp)}</div></div>
-    <div class="metric"><label>結餘</label><div class="val ${bal>=0?'green':'red'}">${fmt(bal)}</div></div>`;
-}
-
-function populateMonths() {
-  const months = new Set(getArr().map(r=>mKey(r.date))); months.add(now());
-  const sorted = Array.from(months).sort().reverse();
-  const s = document.getElementById('filter-month'), cur = s.value || now();
-  s.innerHTML = sorted.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m.replace('-','年')}月</option>`).join('');
+// 畫面
+function drawSummary(){
+  const m=nowM(),a=arr(),s=sal();
+  const mr=a.filter(r=>mk(r.date)===m);
+  let inc=mr.filter(r=>r.type==='i').reduce((x,r)=>x+r.amount,0);
+  let exp=mr.filter(r=>r.type==='e').reduce((x,r)=>x+r.amount,0);
+  if(s) inc=Math.max(inc,s);
+  const bal=inc-exp;
+  document.getElementById('summary').innerHTML=`
+    <div class="mc"><label>本月收入</label><div class="v g">${fmt(inc)}</div></div>
+    <div class="mc"><label>本月支出</label><div class="v r">${fmt(exp)}</div></div>
+    <div class="mc"><label>結餘</label><div class="v ${bal>=0?'g':'r'}">${fmt(bal)}</div></div>`;
 }
 
-function renderList() {
-  const fm = document.getElementById('filter-month').value;
-  const ft = document.getElementById('filter-type').value;
-  let list = getArr().filter(r=>mKey(r.date)===fm);
-  if (ft!=='all') list = list.filter(r=>r.type===ft);
+function fillMonths(){
+  const ms=new Set(arr().map(r=>mk(r.date))); ms.add(nowM());
+  const s=document.getElementById('f-month'),cur=s.value||nowM();
+  s.innerHTML=[...ms].sort().reverse().map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m.replace('-','年')}月</option>`).join('');
+}
+
+function renderList(){
+  const fm=document.getElementById('f-month').value;
+  const ft=document.getElementById('f-type').value;
+  let list=arr().filter(r=>mk(r.date)===fm);
+  if(ft!=='all') list=list.filter(r=>r.type===ft);
   list.sort((a,b)=>b.date.localeCompare(a.date));
-  const el = document.getElementById('record-list');
-  if (!list.length) { el.innerHTML='<div class="empty">這個月沒有記錄</div>'; return; }
-  el.innerHTML = list.map(r=>`
-    <div class="record-item">
-      <div class="rdot ${r.type}"></div>
+  const el=document.getElementById('rec-list');
+  if(!list.length){el.innerHTML='<div class="empty">沒有記錄</div>';return;}
+  el.innerHTML=list.map(r=>`
+    <div class="ri">
+      <div class="dot ${r.type}"></div>
       <div class="rinfo">
-        <div class="name">${r.cat}${r.note?' · '+r.note:''}${isMulti?` <span style="font-size:10px;color:#FF8C42">${r.user}</span>`:''}</div>
-        <div class="meta">${r.date}</div>
+        <div class="rn">${r.cat}${r.note?' · '+r.note:''}${isMulti?` <span style="font-size:10px;color:#FF8C42">${r.user}</span>`:''}</div>
+        <div class="rm">${r.date}</div>
       </div>
-      <div class="ramt ${r.type}">${r.type==='income'?'+':'-'}${fmt(r.amount)}</div>
-      <button class="del-btn" onclick="deleteRecord('${r.id}')">✕</button>
+      <div class="ra ${r.type}">${r.type==='i'?'+':'-'}${fmt(r.amount)}</div>
+      <button class="xb" onclick="delRec('${r.id}')">✕</button>
     </div>`).join('');
 }
 
-function renderAnalysis() {
-  const arr = getArr(), sal = salary(), m = aMonth;
-  document.getElementById('analysis-month-label').textContent = m.replace('-','年')+'月';
-  const mr = arr.filter(r=>mKey(r.date)===m);
-  let inc = mr.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
-  let exp = mr.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
-  if (sal && m===now()) inc = Math.max(inc, sal);
-  const bal = inc - exp, rate = inc>0?Math.round((bal/inc)*100):0;
-  document.getElementById('analysis-metrics').innerHTML = `
-    <div class="metric"><label>收入</label><div class="val green">${fmt(inc)}</div></div>
-    <div class="metric"><label>支出</label><div class="val red">${fmt(exp)}</div></div>
-    <div class="metric"><label>儲蓄率</label><div class="val ${rate>=0?'green':'red'}">${rate}%</div></div>`;
-  renderBars('expense', mr, 'expense-bars');
-  renderBars('income', mr, 'income-bars');
-  renderTrend(arr, sal);
+function drawAnalysis(){
+  const a=arr(),s=sal(),m=aMonth;
+  document.getElementById('a-month').textContent=m.replace('-','年')+'月';
+  const mr=a.filter(r=>mk(r.date)===m);
+  let inc=mr.filter(r=>r.type==='i').reduce((x,r)=>x+r.amount,0);
+  let exp=mr.filter(r=>r.type==='e').reduce((x,r)=>x+r.amount,0);
+  if(s&&m===nowM()) inc=Math.max(inc,s);
+  const bal=inc-exp,rate=inc>0?Math.round(bal/inc*100):0;
+  document.getElementById('a-summary').innerHTML=`
+    <div class="mc"><label>收入</label><div class="v g">${fmt(inc)}</div></div>
+    <div class="mc"><label>支出</label><div class="v r">${fmt(exp)}</div></div>
+    <div class="mc"><label>儲蓄率</label><div class="v ${rate>=0?'g':'r'}">${rate}%</div></div>`;
+  drawBars('e',mr,'exp-bars'); drawBars('i',mr,'inc-bars'); drawChart(a,s);
 }
 
-function renderBars(type, recs, elId) {
-  const cats = {}; recs.filter(r=>r.type===type).forEach(r=>{cats[r.cat]=(cats[r.cat]||0)+r.amount;});
-  const sorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
-  const total = sorted.reduce((s,e)=>s+e[1],0);
-  const el = document.getElementById(elId);
-  if (!sorted.length) { el.innerHTML='<div class="empty" style="padding:.5rem">無記錄</div>'; return; }
-  el.innerHTML = sorted.map(([c,a])=>`
-    <div class="bar-row">
-      <div class="bar-label">${c}</div>
-      <div class="bar-wrap"><div class="bar-fill ${type}" style="width:${Math.round(a/total*100)}%"></div></div>
-      <div class="bar-val">${fmt(a)}</div>
+function drawBars(t,recs,elId){
+  const cats={};
+  recs.filter(r=>r.type===t).forEach(r=>{cats[r.cat]=(cats[r.cat]||0)+r.amount;});
+  const sorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const total=sorted.reduce((s,e)=>s+e[1],0);
+  const el=document.getElementById(elId);
+  if(!sorted.length){el.innerHTML='<div class="empty" style="padding:.5rem">無記錄</div>';return;}
+  el.innerHTML=sorted.map(([c,a])=>`
+    <div class="br">
+      <div class="bl">${c}</div>
+      <div class="bw"><div class="bf ${t}" style="width:${Math.round(a/total*100)}%"></div></div>
+      <div class="bv">${fmt(a)}</div>
     </div>`).join('');
 }
 
-function renderTrend(arr, sal) {
-  const months=[], d=new Date();
-  for(let i=5;i>=0;i--){const x=new Date(d.getFullYear(),d.getMonth()-i,1);months.push(x.toISOString().slice(0,7));}
-  const incs=months.map(m=>{let v=arr.filter(r=>r.type==='income'&&mKey(r.date)===m).reduce((s,r)=>s+r.amount,0);if(sal&&m===now())v=Math.max(v,sal);return v;});
-  const exps=months.map(m=>arr.filter(r=>r.type==='expense'&&mKey(r.date)===m).reduce((s,r)=>s+r.amount,0));
-  if(tChart)tChart.destroy();
-  tChart=new Chart(document.getElementById('trend-chart'),{type:'line',data:{labels:months.map(m=>m.slice(5)+'月'),datasets:[
+function drawChart(a,s){
+  const ms=[],d=new Date();
+  for(let i=5;i>=0;i--){const x=new Date(d.getFullYear(),d.getMonth()-i,1);ms.push(x.toISOString().slice(0,7));}
+  const incs=ms.map(m=>{let v=a.filter(r=>r.type==='i'&&mk(r.date)===m).reduce((x,r)=>x+r.amount,0);if(s&&m===nowM())v=Math.max(v,s);return v;});
+  const exps=ms.map(m=>a.filter(r=>r.type==='e'&&mk(r.date)===m).reduce((x,r)=>x+r.amount,0));
+  if(chart) chart.destroy();
+  chart=new Chart(document.getElementById('chart'),{type:'line',data:{labels:ms.map(m=>m.slice(5)+'月'),datasets:[
     {label:'收入',data:incs,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,.08)',tension:.3,pointRadius:4},
     {label:'支出',data:exps,borderColor:'#D85A30',backgroundColor:'rgba(216,90,48,.08)',tension:.3,pointRadius:4}
   ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
     scales:{y:{ticks:{callback:v=>'NT$'+v.toLocaleString(),font:{size:10}},grid:{color:'rgba(0,0,0,.06)'}},x:{ticks:{font:{size:11}},grid:{display:false}}}}});
 }
 
-function renderSplit() {
-  const el = document.getElementById('split-content');
-  if (!isMulti) { el.innerHTML='<div class="empty">分帳功能需要建立多人房間</div>'; return; }
-  const arr = getArr().filter(r=>mKey(r.date)===now()&&r.type==='expense');
+function drawSplit(){
+  const el=document.getElementById('split-body');
+  if(!isMulti){el.innerHTML='<div class="empty">分帳需要多人房間</div>';return;}
+  const a=arr().filter(r=>mk(r.date)===nowM()&&r.type==='e');
   const users={};
-  arr.forEach(r=>{users[r.user]=(users[r.user]||0)+r.amount;});
-  const uList=Object.keys(users), total=Object.values(users).reduce((s,v)=>s+v,0), avg=uList.length?total/uList.length:0;
-  const rows=uList.map(u=>`<div class="split-row"><span>${u}</span><span class="red">${fmt(users[u])}</span></div>`).join('');
-  const results=[];
-  uList.forEach(u=>{const d=users[u]-avg;if(d<-10)results.push(`${u} 應收 ${fmt(Math.abs(d))}`);else if(d>10)results.push(`${u} 應付 ${fmt(d)}`);});
+  a.forEach(r=>{users[r.user]=(users[r.user]||0)+r.amount;});
+  const ul=Object.keys(users),total=Object.values(users).reduce((s,v)=>s+v,0),avg=ul.length?total/ul.length:0;
+  const rows=ul.map(u=>`<div class="srow"><span>${u}</span><span class="r">${fmt(users[u])}</span></div>`).join('');
+  const res=[];
+  ul.forEach(u=>{const d=users[u]-avg;if(d<-10)res.push(`${u} 應收 ${fmt(Math.abs(d))}`);else if(d>10)res.push(`${u} 應付 ${fmt(d)}`);});
   el.innerHTML=`
     <div class="card">
-      <div class="sec-title">${now().replace('-','年')}月 共同支出</div>
+      <div class="st">${nowM().replace('-','年')}月 共同支出</div>
       ${rows||'<div class="empty" style="padding:.5rem">無記錄</div>'}
-      <div class="split-row"><span>總計</span><span style="font-weight:500">${fmt(total)}</span></div>
-      <div class="split-row"><span>每人平均</span><span>${fmt(avg)}</span></div>
+      <div class="srow"><span>總計</span><span style="font-weight:500">${fmt(total)}</span></div>
+      <div class="srow"><span>每人平均</span><span>${fmt(avg)}</span></div>
     </div>
-    ${results.length?`<div class="split-result">💰 結算<br>${results.join('<br>')}</div>`:''}`;
+    ${res.length?`<div class="sres">💰 結算<br>${res.join('<br>')}</div>`:''}`;
 }
 
-function shiftMonth(d) {
-  const dt=new Date(aMonth+'-01'); dt.setMonth(dt.getMonth()+d);
-  aMonth=dt.toISOString().slice(0,7); renderAnalysis();
-}
+function shiftM(d){const dt=new Date(aMonth+'-01');dt.setMonth(dt.getMonth()+d);aMonth=dt.toISOString().slice(0,7);drawAnalysis();}
 
-function switchTab(t) {
-  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tab-'+t).classList.add('active');
-  TABS.forEach((n,i)=>{if(n===t)document.querySelectorAll('.tab')[i].classList.add('active');});
-  if(t==='list'){populateMonths();renderList();}
-  if(t==='analysis')renderAnalysis();
-  if(t==='split')renderSplit();
+function goTab(t){
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));
+  document.querySelectorAll('.sec').forEach(e=>e.classList.remove('on'));
+  document.getElementById('sec-'+t).classList.add('on');
+  TABS.forEach((n,i)=>{if(n===t)document.querySelectorAll('.tab')[i].classList.add('on');});
+  if(t==='list'){fillMonths();renderList();}
+  if(t==='analysis') drawAnalysis();
+  if(t==='split') drawSplit();
   history.pushState({tab:t},'','');
 }
 
-function updateAll() {
-  renderSummary();
-  const a = document.querySelector('#main-app .section.active');
+function redraw(){
+  drawSummary();
+  const a=document.querySelector('.sec.on');
   if(!a) return;
-  if(a.id==='tab-list'){populateMonths();renderList();}
-  if(a.id==='tab-analysis')renderAnalysis();
-  if(a.id==='tab-split')renderSplit();
+  const t=a.id.replace('sec-','');
+  if(t==='list'){fillMonths();renderList();}
+  if(t==='analysis') drawAnalysis();
+  if(t==='split') drawSplit();
 }
 
 // 選單
-function openMenu() {
-  document.getElementById('side-menu').classList.add('open');
-  document.getElementById('menu-overlay').classList.add('open');
-  document.getElementById('menu-status').innerHTML = isMulti
-    ? `模式：多人<br>名稱：<strong>${roomName||roomId}</strong><br>代碼：${roomId}<br>名字：${userName}`
-    : `模式：個人<br>名字：${userName}`;
-  document.getElementById('menu-leave-sec').classList.toggle('hidden', !isMulti);
-  document.getElementById('menu-multi-sec').classList.toggle('hidden', isMulti);
-  document.getElementById('menu-create-name').value = userName;
-  document.getElementById('menu-join-name').value = userName;
+function openMenu(){
+  document.getElementById('menu').classList.add('show');
+  document.getElementById('mov').classList.add('show');
+  document.getElementById('menu-info').innerHTML=isMulti
+    ?`模式：多人<br>房間：<strong>${roomName||roomId}</strong><br>代碼：${roomId}<br>名字：${uname}`
+    :`模式：個人<br>名字：${uname}`;
+  document.getElementById('m-leave-sec').style.display=isMulti?'block':'none';
+  document.getElementById('m-multi-sec').style.display=isMulti?'none':'block';
+  document.getElementById('m-cname').value=uname;
+  document.getElementById('m-jname').value=uname;
 }
-function closeMenu() {
-  document.getElementById('side-menu').classList.remove('open');
-  document.getElementById('menu-overlay').classList.remove('open');
+function closeMenu(){
+  document.getElementById('menu').classList.remove('show');
+  document.getElementById('mov').classList.remove('show');
 }
-function menuSwitchSolo() {
-  const name = document.getElementById('menu-solo-name').value.trim();
-  if (!name) { alert('請輸入帳本名稱'); return; }
-  stopListening();
-  records = {};
-  closeMenu();
-  doSoloLogin(name);
+function mSolo(){
+  const n=document.getElementById('m-solo').value.trim();
+  if(!n){alert('請輸入帳本名稱');return;}
+  if(dbRef) dbRef.off('value');
+  recs={};closeMenu();doSolo(n);
 }
-function menuCreateRoom() {
-  const name = document.getElementById('menu-create-name').value.trim();
-  const rname = document.getElementById('menu-room-name').value.trim() || ('房間 '+genCode().slice(0,2));
-  if (!name) { alert('請輸入名字'); return; }
-  stopListening();
-  userName = name; isMulti = true; roomId = genCode(); roomName = rname;
-  localStorage.setItem('last_mode', 'multi');
-  localStorage.setItem('last_room_id', roomId);
-  localStorage.setItem('last_room_name', roomName);
-  localStorage.setItem('last_user_name', name);
-  dbRef = db.ref('rooms/'+roomId+'/records');
-  db.ref('rooms/'+roomId+'/meta').set({ name: roomName, host: name, created: Date.now() });
-  updateRoomUI();
-  closeMenu();
-  startListening();
-  alert('房間建立成功！
-名稱：'+roomName+'
-代碼：'+roomId+'
-把代碼分享給朋友加入');
+function mCreate(){
+  const n=document.getElementById('m-cname').value.trim();
+  const rn=document.getElementById('m-rname').value.trim()||'共同帳本';
+  if(!n){alert('請輸入名字');return;}
+  if(dbRef) dbRef.off('value');
+  uname=n;isMulti=true;roomId=genCode();roomName=rn;
+  localStorage.setItem('lu',n);localStorage.setItem('lm','multi');
+  localStorage.setItem('lrid',roomId);localStorage.setItem('lrn',roomName);
+  dbRef=db.ref('rooms/'+roomId+'/records');
+  db.ref('rooms/'+roomId+'/meta').set({name:roomName,host:n,created:Date.now()});
+  document.getElementById('badge').textContent=roomName;
+  document.getElementById('room-info').innerHTML=`房間：<strong>${roomName}</strong><br>代碼：${roomId}<br>名字：${uname}`;
+  closeMenu();listen();
+  alert('房間建立成功！\n名稱：'+roomName+'\n代碼：'+roomId+'\n把代碼分享給朋友');
 }
-function menuJoinRoom() {
-  const name = document.getElementById('menu-join-name').value.trim();
-  const code = document.getElementById('menu-join-code').value.trim().toUpperCase();
-  if (!name||code.length!==4) { alert('請輸入名字和4碼代碼'); return; }
-  stopListening();
-  userName=name; isMulti=true; roomId=code;
-  localStorage.setItem('last_mode', 'multi');
-  localStorage.setItem('last_room_id', roomId);
-  localStorage.setItem('last_user_name', name);
+function mJoin(){
+  const n=document.getElementById('m-jname').value.trim();
+  const code=document.getElementById('m-jcode').value.trim().toUpperCase();
+  if(!n||code.length!==4){alert('請輸入名字和4碼代碼');return;}
+  if(dbRef) dbRef.off('value');
+  uname=n;isMulti=true;roomId=code;
+  localStorage.setItem('lu',n);localStorage.setItem('lm','multi');localStorage.setItem('lrid',code);
   dbRef=db.ref('rooms/'+code+'/records');
-  // 讀取房間名稱
-  db.ref('rooms/'+code+'/meta/name').once('value').then(snap => {
-    roomName = snap.val() || roomId;
-    localStorage.setItem('last_room_name', roomName);
-    updateRoomUI();
+  db.ref('rooms/'+code+'/meta/name').once('value').then(s=>{
+    roomName=s.val()||code;
+    localStorage.setItem('lrn',roomName);
+    document.getElementById('badge').textContent=roomName;
+    document.getElementById('room-info').innerHTML=`房間：<strong>${roomName}</strong><br>代碼：${roomId}<br>名字：${uname}`;
   });
-  closeMenu(); startListening();
+  closeMenu();listen();
 }
-function leaveRoom() {
-  if (!isMulti) return;
-  stopListening();
-  records={};
-  const name=userName;
-  isMulti=false;
-  localStorage.setItem('last_mode', 'solo');
-  localStorage.removeItem('last_room_id');
-  localStorage.removeItem('last_room_name');
-  closeMenu();
-  doSoloLogin(name);
+function mLeave(){
+  if(dbRef) dbRef.off('value');
+  recs={};isMulti=false;
+  localStorage.setItem('lm','solo');
+  localStorage.removeItem('lrid');localStorage.removeItem('lrn');
+  closeMenu();doSolo(uname);
 }
-function saveSalary() { localStorage.setItem('budget_salary', parseInt(document.getElementById('salary-input').value)||0); }
 
 // 快速記帳
-function openQuick() {
+function openQ(){
   qCat='購物';
-  document.getElementById('quick-amount').value='';
-  renderQCats();
-  document.getElementById('quick-overlay').classList.add('open');
-  setTimeout(()=>document.getElementById('quick-amount').focus(),100);
+  document.getElementById('q-amt').value='';
+  renderQC();
+  document.getElementById('qov').classList.add('show');
+  setTimeout(()=>document.getElementById('q-amt').focus(),100);
 }
-function closeQuick(e) { if(e.target===document.getElementById('quick-overlay'))document.getElementById('quick-overlay').classList.remove('open'); }
-function renderQCats() {
-  document.getElementById('quick-cats').innerHTML=ECATS.map(c=>`<button class="qcat ${c===qCat?'active':''}" onclick="selQCat('${c}')">${c}</button>`).join('');
-}
-function selQCat(c){qCat=c;renderQCats();}
-function confirmQuick() {
-  const amt=parseFloat(document.getElementById('quick-amount').value);
+function closeQ(e){if(e.target===document.getElementById('qov'))document.getElementById('qov').classList.remove('show');}
+function renderQC(){document.getElementById('q-cats').innerHTML=EC.map(c=>`<button class="qcat ${c===qCat?'on':''}" onclick="setQC('${c}')">${c}</button>`).join('');}
+function setQC(c){qCat=c;renderQC();}
+function addQ(){
+  const amt=parseFloat(document.getElementById('q-amt').value);
   if(!amt||amt<=0){alert('請輸入金額');return;}
-  dbRef.push({type:'expense',amount:amt,cat:qCat,date:new Date().toISOString().slice(0,10),note:'',user:userName,ts:Date.now()});
-  document.getElementById('quick-overlay').classList.remove('open');
+  dbRef.push({type:'e',amount:amt,cat:qCat,date:new Date().toISOString().slice(0,10),note:'',user:uname,ts:Date.now()});
+  document.getElementById('qov').classList.remove('show');
 }
 
 // 返回鍵
-window.addEventListener('popstate', e => {
-  if (document.getElementById('side-menu').classList.contains('open')) { closeMenu(); history.pushState({},'',''); return; }
-  if (document.getElementById('quick-overlay').classList.contains('open')) { document.getElementById('quick-overlay').classList.remove('open'); history.pushState({},'',''); return; }
-  const prev = (e.state && e.state.tab) || 'record';
-  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tab-'+prev).classList.add('active');
-  TABS.forEach((n,i)=>{if(n===prev)document.querySelectorAll('.tab')[i].classList.add('active');});
-  if(prev==='list'){populateMonths();renderList();}
-  if(prev==='analysis')renderAnalysis();
-  if(prev==='split')renderSplit();
+window.addEventListener('popstate',e=>{
+  if(document.getElementById('menu').classList.contains('show')){closeMenu();history.pushState({},'','');return;}
+  if(document.getElementById('qov').classList.contains('show')){document.getElementById('qov').classList.remove('show');history.pushState({},'','');return;}
+  const t=(e.state&&e.state.tab)||'record';
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.sec').forEach(el=>el.classList.remove('on'));
+  document.getElementById('sec-'+t).classList.add('on');
+  TABS.forEach((n,i)=>{if(n===t)document.querySelectorAll('.tab')[i].classList.add('on');});
+  if(t==='list'){fillMonths();renderList();}
+  if(t==='analysis') drawAnalysis();
+  if(t==='split') drawSplit();
 });
 </script>
 </body>
